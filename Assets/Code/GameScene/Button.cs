@@ -1,26 +1,63 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Button : MonoBehaviour
+namespace GameScene.Player.Button
 {
-    [SerializeField]
-    KeyCode keyCode;
-
-    
-
-    private void Update()
+    public class Button : MonoBehaviour
     {
-    }
+        [SerializeField]
+        KeyCode keyCode;
 
-
-    private void OnTriggerStay2D(Collider2D collision)
-    {
-       if (Input.GetKeyDown(keyCode))
+        SpriteRenderer buttonSprite;
+        
+        Queue<Transform> notesQueue = new Queue<Transform>();
+        private void Awake()
         {
-            Transform point = collision.transform;
+            buttonSprite = transform.GetComponent<SpriteRenderer>();
+        }
 
-            float distance = Vector3.Distance(transform.position, point.position);
+        private void Update()
+        {
+            if (Input.GetKeyDown(keyCode))
+            {
+                buttonSprite.color = Color.white;
+
+                if (notesQueue.Count > 0)
+                    HitNote();
+            }
+
+            if (Input.GetKeyUp(keyCode))
+            {
+                buttonSprite.color = new Color(0.9f, 0.8f, 0.2f, 0.5f);
+            }
+
+        }
+
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            Transform target = collision.transform;
+
+            if (target.CompareTag("Note") && !notesQueue.Contains(target))
+            {
+                notesQueue.Enqueue(target);
+            }
+        }
+
+        private void OnTriggerExit2D(Collider2D collision)
+        {
+            Transform target = collision.transform;
+
+            if (target.CompareTag("Note") && notesQueue.Contains(target))
+            {
+                Destroy(notesQueue.Dequeue().gameObject, 3f);
+            }
+        }
+
+        private void HitNote()
+        {
+            Transform note = notesQueue.Dequeue();
+
+            float distance = Vector3.Distance(transform.position, note.position);
             if (distance <= 0.128f)
             {
                 Debug.Log("Perfect hit!");
@@ -37,8 +74,12 @@ public class Button : MonoBehaviour
             {
                 Debug.Log("Fine hit");
             }
-            Debug.Log(point.name);
-            Destroy(point.gameObject);
+            Destroy(note.gameObject);
+        }
+        
+        public int QueueLength()
+        {
+            return notesQueue.Count;
         }
     }
 }

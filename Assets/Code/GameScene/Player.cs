@@ -1,6 +1,11 @@
 using UnityEngine;
 
-public class Player : MonoBehaviour
+namespace GameScene.Player
 {
+    public class Player : MonoBehaviour
+    {
+
+    }
 
 }
+
