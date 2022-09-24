@@ -34,5 +34,11 @@ namespace GameScene.Notes
         {
             transform.Translate(direction * speed * Time.deltaTime);
         }
+
+        private void OnDrawGizmos()
+        {
+            UnityEditor.Handles.color = Color.black;
+            UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.128f * 0.25f);
+        }
     }
 }
