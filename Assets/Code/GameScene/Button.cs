@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using GameScene.Notes;
+using GameScene.Notes.NoteManager;
 
 namespace GameScene.Player.Button
 {
@@ -10,13 +12,17 @@ namespace GameScene.Player.Button
 
         SpriteRenderer buttonSprite;
         
-        Queue<Transform> notesQueue = new Queue<Transform>();
+        Queue<Note> notesQueue = new Queue<Note>();
         Player player;
+        NoteManager noteManager;
+
+        bool isWaitingForEndNote = false;
         
         private void Awake()
         {
             buttonSprite = transform.GetComponent<SpriteRenderer>();
             player = GameObject.FindObjectOfType<Player>();
+            noteManager = GameObject.FindObjectOfType<NoteManager>();
         }
 
         private void Update()
@@ -32,13 +38,28 @@ namespace GameScene.Player.Button
             if (Input.GetKeyUp(keyCode))
             {
                 buttonSprite.color = new Color(0.9f, 0.8f, 0.2f, 0.5f);
+
+                if (isWaitingForEndNote)
+                {
+                    if (notesQueue.Count > 0)
+                        HitNote();
+                    else
+                    {
+                        isWaitingForEndNote = false;
+                        player.NoteWasMissed();
+                    }
+                }
             }
+
+            if (isWaitingForEndNote)
+                player.LongNoteBeingHit();
 
         }
 
+
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            Transform target = collision.transform;
+            Note target = collision.GetComponent<Note>();
 
             if (target.CompareTag("Note") && !notesQueue.Contains(target))
             {
@@ -48,23 +69,42 @@ namespace GameScene.Player.Button
 
         private void OnTriggerExit2D(Collider2D collision)
         {
-            Transform target = collision.transform;
+            Note target = collision.GetComponent<Note>();
 
             if (target.CompareTag("Note") && notesQueue.Contains(target))
             {
+                isWaitingForEndNote = false;
                 player.NoteWasMissed();
-                Destroy(notesQueue.Dequeue().gameObject, 3f);
+                noteManager.RetrieveNote(notesQueue.Dequeue(), 3f);
             }
         }
 
         private void HitNote()
         {
-            Transform note = notesQueue.Dequeue();
+            Note note = notesQueue.Dequeue();
+            float distance = Vector3.Distance(transform.position, note.transform.position);
 
-            float distance = Vector3.Distance(transform.position, note.position);
-            player.NoteWasHit(HitInfo(distance));
-
-            Destroy(note.gameObject);
+            if (note.GetNoteType() == Note.NoteType.LongBegin)
+            {
+                player.NoteWasHit(HitInfo(distance));
+                isWaitingForEndNote = true;
+                noteManager.RetrieveNote(note);
+            }
+            else 
+            {
+                if (note.GetNoteType() == Note.NoteType.Short)
+                {
+                    player.NoteWasHit(HitInfo(distance));
+                    isWaitingForEndNote = false;
+                    noteManager.RetrieveNote(note);
+                }
+                else if (note.GetNoteType() == Note.NoteType.LongEnd && isWaitingForEndNote)
+                {
+                    player.NoteWasHit(HitInfo(distance));
+                    isWaitingForEndNote = false;
+                    noteManager.RetrieveNote(note);
+                }
+            }
         }
         
         private string HitInfo(float distance)

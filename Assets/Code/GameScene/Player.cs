@@ -7,7 +7,7 @@ namespace GameScene.Player
     public class Player : MonoBehaviour
     {
         [SerializeField]
-        UIController uIController;
+        UIController uiController;
 
         [SerializeField]
         int score, hitNotesCounter, missedNotesCounter, multiplier; 
@@ -18,20 +18,29 @@ namespace GameScene.Player
             score += multiplier;
             hitNotesCounter++;
 
-            uIController.UpdateInfo(score, 
+            uiController.UpdateInfo(score, 
                                     hitInfo, 
                                     CalculateAccuracy(), 
                                     multiplier);
         }
+
+        public void LongNoteBeingHit()
+        {
+            score += multiplier;
+
+            uiController.UpdateScore(score);
+        }
+
         public void NoteWasMissed()
         {
             missedNotesCounter++;
             multiplier = 1;
-            uIController.UpdateInfo(score,
+            uiController.UpdateInfo(score,
                                     "Missed",
                                     CalculateAccuracy(),
                                     multiplier);
         }
+
         private int CalculateAccuracy()
         {
             return (int)(100f * hitNotesCounter / (hitNotesCounter + missedNotesCounter));

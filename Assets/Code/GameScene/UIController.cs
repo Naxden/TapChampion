@@ -14,10 +14,15 @@ namespace GameScene.UI.UIController
 
         public void UpdateInfo(int score, string hitInfo, int accuracy, int multiplier)
         {
-            scoreTM.text = $"Score: {score} ";
+            scoreTM.text = $"Score: {score}";
             hitInfoTM.text = hitInfo;
             accuracyTM.text = $"Accuracy: {accuracy}%";
             multiplierTM.text = $"x{multiplier}";
+        }
+
+        public void UpdateScore(int score)
+        {
+            scoreTM.text = $"Score: {score}";
         }
     }
 }

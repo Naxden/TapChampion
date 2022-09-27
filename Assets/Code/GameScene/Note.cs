@@ -5,26 +5,36 @@ using GameScene.Player.Button;
 
 namespace GameScene.Notes
 {
-    public class MoveNote : MonoBehaviour
+    public class Note : MonoBehaviour
     {
+        public enum NoteType
+        {
+            Short,
+            LongBegin, LongEnd
+        };
+
+        [SerializeField]
+        NoteType noteType;
+
         [SerializeField]
         Button buttonPosition;
         [SerializeField]
         float speed;
         Vector3 direction;
 
-        public void SetButton(Button button)
+
+        public NoteType GetNoteType()
         {
-            buttonPosition = button;
+            return noteType;
         }
 
-        public void SetSpeed(float speed)
+        public void Initialize(Vector3 startingPos, NoteType noteType, Button targetButton, float noteSpeed)
         {
-            this.speed = speed;
-        }
+            transform.position = startingPos;
+            buttonPosition = targetButton;
+            this.noteType = noteType;
+            speed = noteSpeed;
 
-        void Start()
-        {
             Vector3 pos = buttonPosition.transform.position;
             direction = new Vector3(pos.x - transform.position.x, pos.y - transform.position.y);
             direction = Vector3.Normalize(direction);

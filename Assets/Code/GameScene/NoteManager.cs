@@ -1,9 +1,7 @@
 using UnityEngine;
 using GameScene.Player.Button;
 using System.Collections;
-using Unity.VisualScripting;
-using System.Linq.Expressions;
-
+using System.Collections.Generic;
 
 namespace GameScene.Notes.NoteManager
 {
@@ -11,34 +9,68 @@ namespace GameScene.Notes.NoteManager
     {
         [SerializeField]
         GameObject notePrefab;
+
         [SerializeField]
         Button[] buttons;
+
         [SerializeField]
         Vector3[] noteStartingPositions;
 
-        int noteCount;
         bool spawn = true;
+        Queue<Note> notesQueue = new Queue<Note>(100);
 
         void Start()
         {
-            StartCoroutine(generateNotesRoutine());
+            FillQueue();
+
+            StartCoroutine(sendNotesRoutine());
         }
 
-        private IEnumerator generateNotesRoutine()
+        private IEnumerator sendNotesRoutine()
         {
             while (spawn)
             {
-                yield return new WaitForSeconds(Random.Range(1.5f, 2.5f));
+                yield return new WaitForSeconds(Random.Range(1.5f, 2f));
 
-                noteCount++;
-                int index = Random.Range(0, 5);
-                GameObject note = Instantiate(notePrefab, noteStartingPositions[index], Quaternion.identity);
-                MoveNote noteMN = note.GetComponent<MoveNote>();
-                noteMN.SetButton(buttons[index]);
-                noteMN.SetSpeed(2f);
-                note.transform.SetParent(transform, false);
-                note.name = "Note " + noteCount.ToString();
+                SendNote();
             }
+        }
+        private void SendNote()
+        {
+            int buildIndex = Random.Range(0, 5);
+
+            Note note = notesQueue.Dequeue();
+            note.Initialize(
+                            noteStartingPositions[buildIndex] ,
+                            (Note.NoteType)0, 
+                            buttons[buildIndex], 
+                            2f);
+            note.gameObject.SetActive(true);
+        }
+        private void FillQueue()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                Note note = Instantiate(notePrefab, transform.position, Quaternion.identity).GetComponent<Note>();
+                note.gameObject.SetActive(false);
+                note.name = $"Note {i}";
+                note.transform.SetParent(transform, false);
+                notesQueue.Enqueue(note);
+            }
+        }
+
+        public void RetrieveNote(Note note, float timeOffset = 0f)
+        {
+            StartCoroutine(RetrieveNoteRoutine(note, timeOffset));
+        }
+
+        private IEnumerator RetrieveNoteRoutine(Note note, float timeOffset)
+        {
+            yield return new WaitForSeconds(timeOffset);
+
+            note.gameObject.SetActive(false);
+            note.transform.position = transform.position;
+            notesQueue.Enqueue(note);
         }
 
         void Update()
