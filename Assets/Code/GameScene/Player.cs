@@ -1,6 +1,9 @@
 using UnityEngine;
-using GameScene.UI.UIController;
 using UnityEditor.PackageManager;
+using GameScene.UI.UIController;
+using Saving.Note;
+using System.Collections.Generic;
+using GameScene.Notes.NoteManager;
 
 namespace GameScene.Player
 {
@@ -46,6 +49,16 @@ namespace GameScene.Player
                                     "Missed",
                                     CalculateAccuracy(),
                                     multiplier);
+        }
+
+
+        private void Start()
+        {
+            noteFile = FileSystem.ReadNoteFile<NoteFile>("Superwoman");
+
+            noteObjects = noteFile.hard;
+
+            noteManager.Intialize(noteObjects);
         }
 
         private int CalculateAccuracy()

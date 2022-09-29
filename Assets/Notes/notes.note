@@ -1,0 +1,47 @@
+﻿{
+    "easy": [
+        {
+            "spawnTime": 0.0,
+            "buttonIndex": 0,
+            "noteType": 0
+        },
+        {
+            "spawnTime": 0.5,
+            "buttonIndex": 0,
+            "noteType": 0
+        },
+        {
+            "spawnTime": 1.0,
+            "buttonIndex": 1,
+            "noteType": 0
+        },
+        {
+            "spawnTime": 2.0,
+            "buttonIndex": 1,
+            "noteType": 0
+        }
+    ],
+    "medium": [],
+    "hard": [
+        {
+            "spawnTime": 0.0,
+            "buttonIndex": 0,
+            "noteType": 0
+        },
+        {
+            "spawnTime": 0.5,
+            "buttonIndex": 0,
+            "noteType": 0
+        },
+        {
+            "spawnTime": 1.0,
+            "buttonIndex": 1,
+            "noteType": 0
+        },
+        {
+            "spawnTime": 1.5,
+            "buttonIndex": 1,
+            "noteType": 0
+        }
+    ]
+}
