@@ -40,11 +40,7 @@ public static class FileSystem
 
             using (StreamReader sr = new StreamReader(GetPath(fileName), System.Text.Encoding.UTF8))
             {
-                //need to manually build string because "prettyPrint" is ruining string with escape sequences
-                while (!sr.EndOfStream)
-                {
-                    content += sr.ReadLine();
-                }
+                content = sr.ReadToEnd();
 
                 return content;
             }
