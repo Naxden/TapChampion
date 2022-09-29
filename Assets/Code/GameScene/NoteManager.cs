@@ -1,12 +1,15 @@
 using UnityEngine;
-using GameScene.Player.Button;
 using System.Collections;
 using System.Collections.Generic;
+using GameScene.Player.Button;
+using Saving.Note;
+using GameScene.UI.UIController;
 
 namespace GameScene.Notes.NoteManager
 {
     public class NoteManager : MonoBehaviour
     {
+        #region NoteInit
         [SerializeField]
         GameObject notePrefab;
 
@@ -16,37 +19,57 @@ namespace GameScene.Notes.NoteManager
         [SerializeField]
         Vector3[] noteStartingPositions;
 
-        bool spawn = true;
         Queue<Note> notesQueue = new Queue<Note>(100);
+
+        [SerializeField, Range(0.1f, 2f)]
+        float noteDelay;
+        #endregion
+
+        bool spawn = false;
+        const float NOTE_TRAVEL_DISTANCE = 4.75f;
+
+        float songTimer = 0f;
+        int noteIndex = 0;
+
+        List<NoteObject> loadedNotes;
+
+        UIController uiController;
 
         void Start()
         {
+            uiController = FindObjectOfType<UIController>();
             FillQueue();
 
-            StartCoroutine(sendNotesRoutine());
+            //StartCoroutine(sendNotesRoutine());
+            
+        }
+
+        public void Intialize(List<NoteObject> noteObjects)
+        {
+            loadedNotes = noteObjects;
+            spawn = true;
         }
 
         private IEnumerator sendNotesRoutine()
         {
             while (spawn)
             {
-                yield return new WaitForSeconds(Random.Range(1.5f, 2f));
+                yield return new WaitForSeconds(noteDelay);
 
                 SendNote();
             }
         }
+
         private void SendNote()
         {
-            int buildIndex = Random.Range(0, 5);
-
             Note note = notesQueue.Dequeue();
-            note.Initialize(
-                            noteStartingPositions[buildIndex] ,
-                            (Note.NoteType)0, 
-                            buttons[buildIndex], 
-                            2f);
+            note.Initialize(noteStartingPositions[loadedNotes[noteIndex].buttonIndex],
+                            (Note.NoteType)loadedNotes[noteIndex].noteType,
+                            buttons[loadedNotes[noteIndex].buttonIndex]);
+
             note.gameObject.SetActive(true);
         }
+
         private void FillQueue()
         {
             for (int i = 0; i < 100; i++)
@@ -75,20 +98,42 @@ namespace GameScene.Notes.NoteManager
 
         void Update()
         {
+            if (spawn)
+            {
+                songTimer += Time.deltaTime;
+
+                if (noteIndex >= loadedNotes.Count)
+                {
+                    Debug.LogWarning("Load notes, index out of bound");
+                    spawn = false;
+                }
+                else
+                {
+                    while (noteIndex < loadedNotes.Count && songTimer >= loadedNotes[noteIndex].spawnTime )
+                    {
+                        SendNote();
+                        noteIndex++;
+
+                    }
+                }
+                uiController.UpdateTime(songTimer);
+            }
+
             if (Input.GetKeyUp(KeyCode.Space))
                 spawn = false;
 
             if (Input.GetKeyUp(KeyCode.Backspace))
                 ClearAllNotes();
+
         }
 
         void ClearAllNotes()
         {
             foreach (Transform child in transform)
             {
-                Destroy(child.gameObject);
+                RetrieveNote(child.GetComponent<Note>());
             }
         }
+
     }
 }
-

@@ -10,7 +10,14 @@ namespace GameScene.Player
         UIController uiController;
 
         [SerializeField]
-        int score, hitNotesCounter, missedNotesCounter, multiplier; 
+        NoteManager noteManager;
+
+        [SerializeField]
+        int score, hitNotesCounter, missedNotesCounter, multiplier;
+
+        NoteFile noteFile;
+
+        List<NoteObject> noteObjects;
         
         public void NoteWasHit(string hitInfo)
         {

@@ -18,22 +18,20 @@ namespace GameScene.Notes
 
         [SerializeField]
         Button buttonPosition;
-        [SerializeField]
-        float speed;
-        Vector3 direction;
 
+        const float speed = 3.5f;
+        Vector3 direction;
 
         public NoteType GetNoteType()
         {
             return noteType;
         }
 
-        public void Initialize(Vector3 startingPos, NoteType noteType, Button targetButton, float noteSpeed)
+        public void Initialize(Vector3 startingPos, NoteType noteType, Button targetButton)
         {
             transform.position = startingPos;
             buttonPosition = targetButton;
             this.noteType = noteType;
-            speed = noteSpeed;
 
             Vector3 pos = buttonPosition.transform.position;
             direction = new Vector3(pos.x - transform.position.x, pos.y - transform.position.y);

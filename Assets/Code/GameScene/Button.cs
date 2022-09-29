@@ -12,17 +12,24 @@ namespace GameScene.Player.Button
 
         SpriteRenderer buttonSprite;
         
-        Queue<Note> notesQueue = new Queue<Note>();
+        [SerializeField]
         Player player;
+
+        [SerializeField]
         NoteManager noteManager;
+
+        Queue<Note> notesQueue = new Queue<Note>();
+        AudioSource audioSource;
+
 
         bool isWaitingForEndNote = false;
         
         private void Awake()
         {
-            buttonSprite = transform.GetComponent<SpriteRenderer>();
-            player = GameObject.FindObjectOfType<Player>();
-            noteManager = GameObject.FindObjectOfType<NoteManager>();
+            buttonSprite = GetComponent<SpriteRenderer>();
+
+            audioSource = GetComponent<AudioSource>();
+
         }
 
         private void Update()
@@ -64,6 +71,7 @@ namespace GameScene.Player.Button
             if (target.CompareTag("Note") && !notesQueue.Contains(target))
             {
                 notesQueue.Enqueue(target);
+                audioSource.PlayOneShot(audioSource.clip);
             }
         }
 
@@ -126,6 +134,7 @@ namespace GameScene.Player.Button
                 return "Fine";
             }
         }
+
         private void OnDrawGizmos()
         {
             UnityEditor.Handles.color = Color.green;
