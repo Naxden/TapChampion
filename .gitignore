@@ -100,3 +100,6 @@ $RECYCLE.BIN/
 
 # Photoshop projects
 *.psd
+
+# my custom extensions
+/Notes/
