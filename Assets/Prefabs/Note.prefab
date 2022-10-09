@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5402282373271576819}
   - component: {fileID: 5402282373271576829}
   - component: {fileID: 5402282373271576828}
+  - component: {fileID: -7591406331610031896}
   m_Layer: 0
   m_Name: Note
   m_TagString: Note
@@ -114,5 +115,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e5b077c622e96f4d8fbe1e21a9f9216, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  noteType: 0
   buttonPosition: {fileID: 0}
-  speed: 1.25
+--- !u!95 &-7591406331610031896
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5402282373271576816}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f6c73be96139c484397c728a5dca675b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
