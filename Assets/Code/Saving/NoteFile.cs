@@ -28,6 +28,11 @@ namespace Saving.Note
             this.noteType = noteType;
         }
     }
+
+    public enum Difficulty
+    {
+        EASY, MEDIUM, HARD
+    }
 }
 
 

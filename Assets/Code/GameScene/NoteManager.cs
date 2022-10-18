@@ -20,15 +20,12 @@ namespace GameScene.Notes.NoteManager
         Vector3[] noteStartingPositions;
 
         Queue<Note> notesQueue = new Queue<Note>(100);
-
-        [SerializeField, Range(0.1f, 2f)]
-        float noteDelay;
         #endregion
 
         bool spawn = false;
         const float NOTE_TRAVEL_DISTANCE = 4.75f;
 
-        float songTimer = 0f;
+        float songTimer = -3f;
         int noteIndex = 0;
 
         List<NoteObject> loadedNotes;
@@ -39,25 +36,12 @@ namespace GameScene.Notes.NoteManager
         {
             uiController = FindObjectOfType<UIController>();
             FillQueue();
-
-            //StartCoroutine(sendNotesRoutine());
-            
         }
 
         public void Intialize(List<NoteObject> noteObjects)
         {
             loadedNotes = noteObjects;
             spawn = true;
-        }
-
-        private IEnumerator sendNotesRoutine()
-        {
-            while (spawn)
-            {
-                yield return new WaitForSeconds(noteDelay);
-
-                SendNote();
-            }
         }
 
         private void SendNote()
@@ -113,7 +97,6 @@ namespace GameScene.Notes.NoteManager
                     {
                         SendNote();
                         noteIndex++;
-
                     }
                 }
                 uiController.UpdateTime(songTimer);

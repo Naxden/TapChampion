@@ -150,6 +150,7 @@ namespace GameScene.Player.Button
             UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.128f);
 
         }
+
         public int QueueLength()
         {
             return notesQueue.Count;

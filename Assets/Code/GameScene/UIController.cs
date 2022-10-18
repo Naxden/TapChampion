@@ -1,8 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using GameScene.Player;
-using UnityEngine.UI;
 using TMPro;
 
 namespace GameScene.UI.UIController

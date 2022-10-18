@@ -1,27 +1,46 @@
 using UnityEngine;
-using UnityEditor.PackageManager;
 using GameScene.UI.UIController;
 using Saving.Note;
 using System.Collections.Generic;
 using GameScene.Notes.NoteManager;
+using System.Collections;
+using Saving.SavingSystem;
 
 namespace GameScene.Player
 {
     public class Player : MonoBehaviour
     {
+    #region Managers
+        [Header("Managers Links")]
         [SerializeField]
         UIController uiController;
 
         [SerializeField]
         NoteManager noteManager;
+    #endregion
 
+    #region gameNumbers
+        [Header("GameplayValues")]
         [SerializeField]
-        int score, hitNotesCounter, missedNotesCounter, multiplier;
+        int score;
+        [SerializeField]
+        int hitNotesCounter;
+        [SerializeField]
+        int missedNotesCounter;
+        [SerializeField]
+        int multiplier;
+    #endregion
 
+    #region SongVariables
+        string songName;
         NoteFile noteFile;
+        Difficulty difficulty;
+        [SerializeField, Header("Song")]
+        AudioSource audioSource;
+        [SerializeField]
+        SpriteRenderer songBackgroundRenderer;
+    #endregion
 
-        List<NoteObject> noteObjects;
-        
         public void NoteWasHit(string hitInfo)
         {
             multiplier = 2;
@@ -54,11 +73,41 @@ namespace GameScene.Player
 
         private void Start()
         {
-            noteFile = FileSystem.ReadNoteFile<NoteFile>("Superwoman");
+            StartCoroutine(SongInitializeRoutine());
+        }
 
-            noteObjects = noteFile.hard;
+        IEnumerator SongInitializeRoutine()
+        {
+            songName = "Test";
 
-            noteManager.Intialize(noteObjects);
+            songBackgroundRenderer.sprite = FileSystem.GetSprite(songName);
+
+            yield return FileSystem.GetAudioClipRoutine(songName, audioSource);
+
+            noteFile = FileSystem.GetNoteFile(songName);
+            noteManager.Intialize(GetNoteList());
+        }
+
+        private List<NoteObject> GetNoteList()
+        {
+            if (noteFile != null)
+            {
+                switch((int)difficulty)
+                {
+                    case 0:
+                        return noteFile.easy;
+                    case 1:
+                        return noteFile.medium;
+                    case 2:
+                        return noteFile.hard;
+                    default:
+                        Debug.Log("Player.GetNotes() difficulty is not set");
+                        return null;
+                }
+            }
+
+            Debug.LogWarning("Player.GetNotes() noteFile is empty");
+            return null;    
         }
 
         private int CalculateAccuracy()
