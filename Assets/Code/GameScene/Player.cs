@@ -39,6 +39,11 @@ namespace GameScene.Player
         AudioSource audioSource;
         [SerializeField]
         SpriteRenderer songBackgroundRenderer;
+        #endregion
+
+    #region PlayerSettings
+        [SerializeField, Header("Player Settings")]
+        float timeCalibration = 0f;
     #endregion
 
         public void NoteWasHit(string hitInfo)
@@ -80,12 +85,12 @@ namespace GameScene.Player
         {
             songName = "Test";
 
-            songBackgroundRenderer.sprite = FileSystem.GetSprite(songName);
+            songBackgroundRenderer.sprite = FileManager.GetSprite(songName);
 
-            yield return FileSystem.GetAudioClipRoutine(songName, audioSource);
+            yield return FileManager.GetAudioClipRoutine(songName, audioSource);
 
-            noteFile = FileSystem.GetNoteFile(songName);
-            noteManager.Intialize(GetNoteList());
+            noteFile = FileManager.GetNoteFile(songName);
+            noteManager.Intialize(GetNoteList(), timeCalibration);
         }
 
         private List<NoteObject> GetNoteList()

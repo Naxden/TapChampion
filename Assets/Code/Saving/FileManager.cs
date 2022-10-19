@@ -5,15 +5,18 @@ using UnityEditor;
 using System;
 using UnityEngine.Networking;
 using System.Collections;
+using SimpleFileBrowser;
+using static SimpleFileBrowser.FileBrowser;
 
 namespace Saving.SavingSystem
 {
-    public static class FileSystem
+    public static class FileManager
     {
         const string MUSIC_BEGIN = "#Music\n", MUSIC_END = "#EndMusic";
         const string NOTE_MAP_BEGIN = "#NoteMap\n", NOTE_MAP_END = "#EndNoteMap";
         const string SPRITE_BEGIN = "#Sprite\n", SPRITE_END = "#EndSprite";
 
+        public enum FileExtension {TAPCH, MUSIC, IMAGE};
 
         public static void WriteNoteFile(string path, NoteFile toSave)
         {
@@ -38,9 +41,9 @@ namespace Saving.SavingSystem
             writer.Write(content);
         }
 
-        public static IEnumerator GetAudioClipRoutine(string songName, AudioSource audioOutput)
+        public static IEnumerator GetAudioClipRoutine(string path, AudioSource audioOutput)
         {
-            using var www = UnityWebRequestMultimedia.GetAudioClip("file://" + GetPath($"/Songs/{songName}/{songName}.mp3"), AudioType.MPEG);
+            using var www = UnityWebRequestMultimedia.GetAudioClip("file://" + path, AudioType.MPEG);
             yield return www.SendWebRequest();
 
             if (www.result == UnityWebRequest.Result.ConnectionError)
@@ -53,9 +56,8 @@ namespace Saving.SavingSystem
             }
         }
 
-        public static Sprite GetSprite(string spriteName)
+        public static Sprite GetSprite(string path)
         {
-            string path = GetPath($"/Songs/{spriteName}/{spriteName}.png");
             byte[] buffor = ReadBinaryFile(path);
 
             if (buffor != null)
@@ -74,10 +76,8 @@ namespace Saving.SavingSystem
             return null;
         }
 
-        public static NoteFile GetNoteFile(string noteFileName)
+        public static NoteFile GetNoteFile(string path)
         {
-            string path = GetPath($"/Songs/{noteFileName}/{noteFileName}.note");
-
             if (File.Exists(path))
             {
                 return StringToNoteFile(ReadFile(path));
@@ -87,7 +87,7 @@ namespace Saving.SavingSystem
             return null;
         }
 
-        private static string GetPath(string fileName)
+        public static string GetPath(string fileName)
         {
             return Directory.GetCurrentDirectory() + fileName;
         }
@@ -132,9 +132,53 @@ namespace Saving.SavingSystem
             return Directory.GetFiles(directoryPath);
         }
 
+        public static void FileDialogInitialize()
+        {
+            FileBrowser.SetFilters(true, new FileBrowser.Filter("TapChapmpion", ".tapch"),
+                                         new FileBrowser.Filter("Images", ".jpg", ".png"),
+                                         new FileBrowser.Filter("Music", ".mp3"));
+            FileBrowser.AddQuickLink("Downloads", GetPath("/Downloads"));
+            FileBrowser.AddQuickLink("Songs", GetPath("/Songs"));
+
+        }
+
+        public static void ShowLoadDialog(FileBrowser.OnSuccess onSuccess, FileBrowser.OnCancel onCancel, string label)
+        {
+            if (onSuccess == null)
+            {
+                Debug.LogError("ShowLoadDialog: onSucces delegate is empty");
+                return;
+            }
+            if (onCancel == null)
+            {
+                Debug.LogError("ShowLoadDialog: onCancel delegate is empty");
+                return;
+            }
+
+            FileBrowser.ShowLoadDialog(onSuccess, onCancel, FileBrowser.PickMode.Files, 
+                                        false, GetPath("/Downloads"), null, label);
+        }
+        public static void SetDefaultFilter(FileExtension fileExtension)
+        {
+            switch ((int)fileExtension)
+            {
+                case 0:
+                    FileBrowser.SetDefaultFilter(".tapch");
+                    break;
+                case 1:
+                    FileBrowser.SetDefaultFilter(".mp3");
+                    break;
+                case 2:
+                    FileBrowser.SetDefaultFilter(".png");
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public static void ImportTapchFile()
         {
-            string file = EditorUtility.OpenFilePanel("Select File to import", GetPath("/Downloads"), "tapch");
+            string file = EditorUtility.OpenFilePanel("Select .tapch File to import", GetPath("/Downloads"), "tapch");
             if (file.Length == 0)
             {
                 Debug.Log("ImportTapchFile: File import fail");

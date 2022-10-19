@@ -29,6 +29,7 @@ namespace GameScene.Notes.NoteManager
         int noteIndex = 0;
 
         List<NoteObject> loadedNotes;
+        float timeCalibration = 0f;
 
         UIController uiController;
 
@@ -38,8 +39,9 @@ namespace GameScene.Notes.NoteManager
             FillQueue();
         }
 
-        public void Intialize(List<NoteObject> noteObjects)
+        public void Intialize(List<NoteObject> noteObjects, float timeCalibration)
         {
+            this.timeCalibration = timeCalibration; 
             loadedNotes = noteObjects;
             spawn = true;
         }
@@ -93,7 +95,8 @@ namespace GameScene.Notes.NoteManager
                 }
                 else
                 {
-                    while (noteIndex < loadedNotes.Count && songTimer >= loadedNotes[noteIndex].spawnTime )
+                    while (noteIndex < loadedNotes.Count && 
+                        songTimer >= (loadedNotes[noteIndex].spawnTime + timeCalibration))
                     {
                         SendNote();
                         noteIndex++;
