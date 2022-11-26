@@ -18,6 +18,8 @@ namespace Saving.SavingSystem
 
         public enum FileExtension {TAPCH, MUSIC, IMAGE};
 
+        public static bool loadDialogInitialized = false;
+
         public static void WriteNoteFile(string path, NoteFile toSave)
         {
             string content = JsonUtility.ToJson(toSave, true);
@@ -115,9 +117,9 @@ namespace Saving.SavingSystem
             return null;
         }
 
-        private static string GetPartOfString(string content, string beginFlag, string endFlag)
+        public static string GetPartOfString(string content, string beginFlag, string endFlag)
         {
-            int beginIndex = content.IndexOf(beginFlag) + beginFlag.Length;
+            int beginIndex = content.LastIndexOf(beginFlag) + beginFlag.Length;
             int endIndex = content.IndexOf(endFlag);
 
             if (beginIndex < endIndex)
@@ -127,10 +129,10 @@ namespace Saving.SavingSystem
             return null;
         }
 
-        public static string[] GetFileList(string directoryPath)
+        public static bool DoesSongExist(string songName)
         {
-            return Directory.GetFiles(directoryPath);
-        }
+            return Directory.Exists(GetPath("/Songs/") + songName);
+        } 
 
         public static void FileDialogInitialize()
         {
@@ -139,10 +141,11 @@ namespace Saving.SavingSystem
                                          new FileBrowser.Filter("Music", ".mp3"));
             FileBrowser.AddQuickLink("Downloads", GetPath("/Downloads"));
             FileBrowser.AddQuickLink("Songs", GetPath("/Songs"));
-
+            loadDialogInitialized = true;
         }
 
-        public static void ShowLoadDialog(FileBrowser.OnSuccess onSuccess, FileBrowser.OnCancel onCancel, string label)
+        public static void ShowLoadDialog(FileBrowser.OnSuccess onSuccess, FileBrowser.OnCancel onCancel,
+                                          string label, FileExtension extension)
         {
             if (onSuccess == null)
             {
@@ -154,7 +157,12 @@ namespace Saving.SavingSystem
                 Debug.LogError("ShowLoadDialog: onCancel delegate is empty");
                 return;
             }
+            if (!loadDialogInitialized)
+            {
+                FileDialogInitialize();
+            }
 
+            SetDefaultFilter(extension);
             FileBrowser.ShowLoadDialog(onSuccess, onCancel, FileBrowser.PickMode.Files, 
                                         false, GetPath("/Downloads"), null, label);
         }
@@ -178,14 +186,19 @@ namespace Saving.SavingSystem
 
         public static void ImportTapchFile()
         {
-            string file = EditorUtility.OpenFilePanel("Select .tapch File to import", GetPath("/Downloads"), "tapch");
-            if (file.Length == 0)
+            string filePath = "";
+            FileManager.ShowLoadDialog((paths) => filePath = paths[0], 
+                                        () => filePath = "",
+                                        "Load TapCh file",
+                                        FileExtension.TAPCH);
+                                        
+            if (filePath.Length == 0)
             {
                 Debug.Log("ImportTapchFile: File import fail");
                 return;
             }
 
-            string content = ReadFile(file);
+            string content = ReadFile(filePath);
             NoteFile noteFile = StringToNoteFile(content);
             string title = noteFile.title;
             string directoryPath = SetSongDirectory(title);
@@ -198,6 +211,11 @@ namespace Saving.SavingSystem
         }
 
         public static void ExportTapchFile()
+        {
+
+        }
+
+        public static void RecordSong(string songPath, string imagePath, NoteFile noteFile)
         {
 
         }

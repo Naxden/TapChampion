@@ -7,13 +7,13 @@ namespace Saving.Note
     {
         public string title = "";
         public string author = "";
-        public string year = "";
+        public int year;
 
         public List<NoteObject> easy;
         public List<NoteObject> medium;
         public List<NoteObject> hard;
     }
-
+    
     [System.Serializable]
     public struct NoteObject
     {
@@ -29,6 +29,12 @@ namespace Saving.Note
         }
     }
 
+    public enum NoteType
+    {
+        Short,
+        LongBegin, LongEnd
+    };
+    
     public enum Difficulty
     {
         EASY, MEDIUM, HARD
