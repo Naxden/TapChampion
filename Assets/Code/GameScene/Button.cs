@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using GameScene.Notes;
 using GameScene.Notes.NoteManager;
+using Saving.Note;
 
 namespace GameScene.Player.Button
 {
@@ -18,7 +19,7 @@ namespace GameScene.Player.Button
         [SerializeField]
         NoteManager noteManager;
 
-        Queue<Note> notesQueue = new Queue<Note>();
+        Queue<NoteMB> notesQueue = new Queue<NoteMB>();
         AudioSource audioSource;
 
 
@@ -66,7 +67,7 @@ namespace GameScene.Player.Button
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            Note target = collision.GetComponent<Note>();
+            NoteMB target = collision.GetComponent<NoteMB>();
 
             if (target.CompareTag("Note") && !notesQueue.Contains(target))
             {
@@ -77,7 +78,7 @@ namespace GameScene.Player.Button
 
         private void OnTriggerExit2D(Collider2D collision)
         {
-            Note target = collision.GetComponent<Note>();
+            NoteMB target = collision.GetComponent<NoteMB>();
 
             if (target.CompareTag("Note") && notesQueue.Contains(target))
             {
@@ -89,10 +90,10 @@ namespace GameScene.Player.Button
 
         private void HitNote()
         {
-            Note note = notesQueue.Dequeue();
+            NoteMB note = notesQueue.Dequeue();
             float distance = Vector3.Distance(transform.position, note.transform.position);
 
-            if (note.GetNoteType() == Note.NoteType.LongBegin)
+            if (note.GetNoteType() == NoteType.LongBegin)
             {
                 player.NoteWasHit(HitInfo(distance));
                 isWaitingForEndNote = true;
@@ -100,13 +101,13 @@ namespace GameScene.Player.Button
             }
             else 
             {
-                if (note.GetNoteType() == Note.NoteType.Short)
+                if (note.GetNoteType() == NoteType.Short)
                 {
                     player.NoteWasHit(HitInfo(distance));
                     isWaitingForEndNote = false;
                     noteManager.RetrieveNote(note);
                 }
-                else if (note.GetNoteType() == Note.NoteType.LongEnd && isWaitingForEndNote)
+                else if (note.GetNoteType() == NoteType.LongEnd && isWaitingForEndNote)
                 {
                     player.NoteWasHit(HitInfo(distance));
                     isWaitingForEndNote = false;
@@ -135,21 +136,21 @@ namespace GameScene.Player.Button
             }
         }
 
-        private void OnDrawGizmos()
-        {
-            UnityEditor.Handles.color = Color.green;
-            UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 1.28f);
+        //private void OnDrawGizmos()
+        //{
+        //    UnityEditor.Handles.color = Color.green;
+        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 1.28f);
 
-            UnityEditor.Handles.color = Color.yellow;
-            UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.768f);
+        //    UnityEditor.Handles.color = Color.yellow;
+        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.768f);
 
-            UnityEditor.Handles.color = Color.blue;
-            UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.384f);
+        //    UnityEditor.Handles.color = Color.blue;
+        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.384f);
 
-            UnityEditor.Handles.color = Color.red;
-            UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.128f);
+        //    UnityEditor.Handles.color = Color.red;
+        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.128f);
 
-        }
+        //}
 
         public int QueueLength()
         {

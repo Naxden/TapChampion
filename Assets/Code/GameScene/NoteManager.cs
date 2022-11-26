@@ -11,7 +11,11 @@ namespace GameScene.Notes.NoteManager
     {
         #region NoteInit
         [SerializeField]
-        GameObject notePrefab;
+        GameObject noteShortPrefab;
+        [SerializeField]
+        GameObject noteLongBegPrefab;
+        [SerializeField]
+        GameObject noteLongEndPrefab;
 
         [SerializeField]
         Button[] buttons;
@@ -19,7 +23,7 @@ namespace GameScene.Notes.NoteManager
         [SerializeField]
         Vector3[] noteStartingPositions;
 
-        Queue<Note> notesQueue = new Queue<Note>(100);
+        Queue<NoteMB> notesQueue = new Queue<NoteMB>(100);
         #endregion
 
         bool spawn = false;
@@ -48,10 +52,20 @@ namespace GameScene.Notes.NoteManager
 
         private void SendNote()
         {
-            Note note = notesQueue.Dequeue();
+            NoteMB note = notesQueue.Dequeue();
+
+            NoteType noteType = (NoteType)loadedNotes[noteIndex].noteType;
+            
             note.Initialize(noteStartingPositions[loadedNotes[noteIndex].buttonIndex],
-                            (Note.NoteType)loadedNotes[noteIndex].noteType,
+                            noteType,
                             buttons[loadedNotes[noteIndex].buttonIndex]);
+            
+            if (noteType == NoteType.Short)
+                note.UpdateVisuals(noteShortPrefab);
+            else if (noteType == NoteType.LongBegin)
+                note.UpdateVisuals(noteLongBegPrefab);
+            else
+                note.UpdateVisuals(noteLongEndPrefab);
 
             note.gameObject.SetActive(true);
         }
@@ -60,7 +74,7 @@ namespace GameScene.Notes.NoteManager
         {
             for (int i = 0; i < 100; i++)
             {
-                Note note = Instantiate(notePrefab, transform.position, Quaternion.identity).GetComponent<Note>();
+                NoteMB note = Instantiate(noteShortPrefab, transform.position, Quaternion.identity).GetComponent<NoteMB>();
                 note.gameObject.SetActive(false);
                 note.name = $"Note {i}";
                 note.transform.SetParent(transform, false);
@@ -68,12 +82,12 @@ namespace GameScene.Notes.NoteManager
             }
         }
 
-        public void RetrieveNote(Note note, float timeOffset = 0f)
+        public void RetrieveNote(NoteMB note, float timeOffset = 0f)
         {
             StartCoroutine(RetrieveNoteRoutine(note, timeOffset));
         }
 
-        private IEnumerator RetrieveNoteRoutine(Note note, float timeOffset)
+        private IEnumerator RetrieveNoteRoutine(NoteMB note, float timeOffset)
         {
             yield return new WaitForSeconds(timeOffset);
 
@@ -96,7 +110,7 @@ namespace GameScene.Notes.NoteManager
                 else
                 {
                     while (noteIndex < loadedNotes.Count && 
-                        songTimer >= (loadedNotes[noteIndex].spawnTime + timeCalibration))
+                           songTimer >= (loadedNotes[noteIndex].spawnTime + timeCalibration))
                     {
                         SendNote();
                         noteIndex++;
@@ -117,7 +131,7 @@ namespace GameScene.Notes.NoteManager
         {
             foreach (Transform child in transform)
             {
-                RetrieveNote(child.GetComponent<Note>());
+                RetrieveNote(child.GetComponent<NoteMB>());
             }
         }
 
