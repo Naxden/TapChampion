@@ -3,6 +3,8 @@ using UnityEngine;
 using Saving.SavingSystem;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.Audio;
+using Saving.Note;
 
 namespace Recording
 {
@@ -10,13 +12,22 @@ namespace Recording
     {
 #region Private Variables 
         string songPath, imagePath;
+
         [SerializeField]
         AudioSource audioSource;
 
         [SerializeField]
+        AudioMixer audioMixer;
+
+        [SerializeField]
         SpriteRenderer spriteRenderer;
+
         bool songLoaded = false;
         bool songIsPlaying = false;
+        bool songExists = false;
+
+        [SerializeField]
+        NoteFile songNoteFile = new NoteFile();
 #endregion
 #region Control button
         [SerializeField, Header("Control buttons")]
@@ -30,6 +41,9 @@ namespace Recording
 
         [SerializeField]
         Slider slider;
+
+        [SerializeField]
+        Button importImageButton;
 #endregion
 #region Song Timers
         [SerializeField, Header("Song timers")]
@@ -38,10 +52,16 @@ namespace Recording
         [SerializeField]
         TextMeshProUGUI songLength;
 #endregion
-        private void Awake()
-        {
-            FileManager.FileDialogInitialize();
-        }
+#region Song Input Data
+        [SerializeField, Header("Song Input Data")]
+        TMP_InputField songTitleInput;
+
+        [SerializeField]
+        TMP_InputField songAuthorInput;
+
+        [SerializeField]
+        TMP_InputField songYearInput;
+#endregion
 
         private void Update()
         {
@@ -53,13 +73,55 @@ namespace Recording
             }
         }
 
+        public void ChangePlaybackSpeed(int value)
+        {
+            switch (value)
+            {
+                case 0:
+                    ChangeMixerSpeed(0.25f);
+                    break;
+                case 1:
+                    ChangeMixerSpeed(0.5f);
+                    break;
+                case 2:
+                    ChangeMixerSpeed(0.75f);
+                    break;
+                case 3:
+                    ChangeMixerSpeed(1f);
+                    break;
+                case 4:
+                    ChangeMixerSpeed(1.25f);
+                    break;
+                case 5:
+                    ChangeMixerSpeed(1.5f);
+                    break;
+                case 6:
+                    ChangeMixerSpeed(1.75f);
+                    break;
+                case 7:
+                    ChangeMixerSpeed(2f);
+                    break;
+                default:
+                    ChangeMixerSpeed(1f);
+                    break;
+            }
+        }
+
+        private void ChangeMixerSpeed(float speed)
+        {
+            audioSource.pitch = speed;
+            if (speed >= 1f)
+                audioMixer.SetFloat("MyPitch", 1f / speed);
+            else
+                audioMixer.SetFloat("MyPitch", 1f);
+        }
+
         public void ImportSong()
         {
             if (songLoaded)
                 StopSong();
 
-            FileManager.SetDefaultFilter(FileManager.FileExtension.MUSIC);
-            FileManager.ShowLoadDialog(LoadSongSucces, LoadSongCancel, "Load Song");
+            FileManager.ShowLoadDialog(LoadSongSucces, LoadSongCancel, "Load Song", FileManager.FileExtension.MUSIC);
         }
 
         private void LoadSongCancel()
@@ -79,8 +141,14 @@ namespace Recording
         private IEnumerator LoadedSongRoutine(string path)
         {
             yield return FileManager.GetAudioClipRoutine(path, audioSource);
-
+            
             songPath = path;
+            songNoteFile.title = FileManager.GetPartOfString(path, "\\", ".mp3");
+            songExists = FileManager.DoesSongExist(songNoteFile.title);
+
+            if (songExists)
+                LoadExistingSong(songNoteFile.title);
+
             songLength.text = "/ " + GetFormattedTime(audioSource.clip.length);
             slider.maxValue = audioSource.clip.length;
             slider.interactable = true;
@@ -88,6 +156,18 @@ namespace Recording
             
             playButton.gameObject.SetActive(true);
             playButton.interactable = true;
+        }
+
+        private void LoadExistingSong(string songTitle)
+        {
+            string songDirPath = FileManager.GetPath("/Songs/" + songTitle);
+
+            spriteRenderer.sprite = FileManager.GetSprite(songDirPath + $"/{songTitle}.png");
+            
+            songNoteFile = FileManager.GetNoteFile(songDirPath + $"/{songTitle}.note");
+            songTitleInput.text = songNoteFile.title;
+            songAuthorInput.text = songNoteFile.author;
+            songYearInput.text = songNoteFile.year.ToString();
         }
 
         private string GetFormattedTime(float time)
@@ -99,8 +179,8 @@ namespace Recording
 
         public void ImportImage()
         {
-            FileManager.SetDefaultFilter(FileManager.FileExtension.IMAGE);
-            FileManager.ShowLoadDialog(LoadImageSucces, LoadImageCancel, "Load Image");
+            FileManager.ShowLoadDialog(LoadImageSucces, LoadImageCancel, 
+                                      "Load Image", FileManager.FileExtension.IMAGE);
         }
 
         private void LoadImageCancel()
@@ -111,6 +191,7 @@ namespace Recording
         private void LoadImageSucces(string[] paths)
         {
             spriteRenderer.sprite = FileManager.GetSprite(paths[0]);
+            imagePath = paths[0];
         }
 
         public void PlaySong()
@@ -151,6 +232,12 @@ namespace Recording
             float timeElapsed = slider.value;
             audioSource.time = timeElapsed;
             currentTime.text = GetFormattedTime(timeElapsed);
+        }
+
+        public void SaveSong()
+        {
+            songNoteFile.easy.Sort((p, q) => p.spawnTime.CompareTo(q.spawnTime));
+            //songNoteFile.easy.Insert()
         }
     }
 }
