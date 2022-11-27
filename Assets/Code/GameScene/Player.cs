@@ -83,13 +83,13 @@ namespace GameScene.Player
 
         IEnumerator SongInitializeRoutine()
         {
-            songName = "Test";
+            songName = FileManager.GetPath("/Songs/Test/" + "Test");
 
-            songBackgroundRenderer.sprite = FileManager.GetSprite(songName);
+            songBackgroundRenderer.sprite = FileManager.GetSprite(songName+".png");
 
-            yield return FileManager.GetAudioClipRoutine(songName, audioSource);
+            yield return FileManager.GetAudioClipRoutine(songName+".mp3", audioSource);
 
-            noteFile = FileManager.GetNoteFile(songName);
+            noteFile = FileManager.GetNoteFile(songName+".note");
             noteManager.Intialize(GetNoteList(), timeCalibration);
         }
 
