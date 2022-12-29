@@ -4,10 +4,14 @@ using Saving.SavingSystem;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Audio;
+using UnityEngine.Events;
 using Saving.Note;
 
 namespace Recording
 {
+    [System.Serializable]
+    public class MyFloatEvent : UnityEvent<float> { }
+
     public class Recorder : MonoBehaviour
     {
 #region Private Variables 
@@ -23,8 +27,15 @@ namespace Recording
         SpriteRenderer spriteRenderer;
 
         bool songLoaded = false;
-        bool songIsPlaying = false;
+        public bool songIsPlaying { get; private set; } = false;
         bool songExists = false;
+
+        [SerializeField]
+        private MyFloatEvent OnSongLoad;
+        
+        [SerializeField]
+        private UnityEvent OnSongSelect;
+
 
         [SerializeField]
         NoteFile songNoteFile = new NoteFile();
@@ -63,6 +74,7 @@ namespace Recording
         TMP_InputField songYearInput;
 #endregion
 
+        
         private void Update()
         {
             if (songLoaded && songIsPlaying)
@@ -122,6 +134,7 @@ namespace Recording
                 StopSong();
 
             FileManager.ShowLoadDialog(LoadSongSucces, LoadSongCancel, "Load Song", FileManager.FileExtension.MUSIC);
+            OnSongSelect.Invoke();
         }
 
         private void LoadSongCancel()
@@ -156,6 +169,8 @@ namespace Recording
             
             playButton.gameObject.SetActive(true);
             playButton.interactable = true;
+            
+            OnSongLoad.Invoke(slider.maxValue);
         }
 
         private void LoadExistingSong(string songTitle)
