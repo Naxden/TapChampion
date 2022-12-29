@@ -1,53 +1,41 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Saving.Note;
+using System;
+using UnityEngine.UIElements;
+
 
 namespace Recording.NoteRenderer
 {
+    using Track = List<GameObject>;
+
     public class NoteRenderer : MonoBehaviour
     {
         [SerializeField]
-        private GameObject noteShortPrefab;
-        
-        [SerializeField]
-        private GameObject noteLongBegPrefab;
-
-        [SerializeField]
-        private GameObject noteLongEndPrefab;
+        private GameObject[] notePrefabs = new GameObject[3];
 
         private float[] tracksPositions = {1.25f, 0f, -1.25f, -2.5f, -3.75f};
-        private GameObject[,] notesArrays = new GameObject[5, 1200];
-        private Vector3 offScreenPos = new Vector3(-2000, 0, 0);
 
-        
-        private void Start() 
+        private List<Track> trackList;
+        private float songLength;
+
+        // function called externally by Event
+        public void CreateEmptyNotes(float songLength)
         {
-            FillTracks();
+            this.songLength = songLength;
+
+            trackList = new List<Track>(5);
+
+            for (int i = 0; i < 5; i++)
+                trackList.Add(new Track(128)); // using some initial value as size of list
         }
 
-        private void FillTracks()
+        public void AddNote(Vector3 notePos, NoteType noteType)
         {
-            for (int track = 0; track < 5; track++)
-            {
-                for (int i = 0; i < 1200; i++)
-                {
-                    offScreenPos.y = tracksPositions[track];
-                    GameObject note = Instantiate(noteShortPrefab, offScreenPos, Quaternion.identity);
-                    note.gameObject.SetActive(false);
-                    note.name = $"{track} Note {i}";
-                    note.transform.SetParent(transform, false);
-                    notesArrays[track, i] = note;
-                }
-            }
-        }
-        
+            float xPos = notePos.x;
+            float yPos = notePos.y;
 
-        public void AddNote(Vector3 position, NoteType noteType)
-        {
-            int xPos = (int)Mathf.Round(position.x);
-            float yPos = position.y;
-
-            if (yPos < -4.25f || yPos > 1.5f || xPos < -5 || xPos > 1194)
+            if (yPos < -4.25f || yPos > 1.5f || xPos < -5f || xPos > (songLength * 10) - 5f)
                 return;
 
             int track = 0;
@@ -64,36 +52,47 @@ namespace Recording.NoteRenderer
                 }
             }
 
-            if (notesArrays[track, xPos + 5].activeSelf)
+            xPos = Mathf.Round((float)xPos / 0.75f) * 0.75f - 0.5f;
+            Vector3 newPos = new Vector3(xPos, tracksPositions[track]);
+
+            if (IsNoteThere(newPos) != null)
                 return;
 
-            SetNote(track, xPos, noteType);
+            GameObject note = Instantiate(notePrefabs[(int)noteType], newPos, Quaternion.identity);
+            note.transform.SetParent(transform, false);
+            
+            trackList[track].Add(note);    
         }
 
-        void SetNote(int track, int xPos, NoteType noteType)
+        public GameObject IsNoteThere(Vector3 pos)
         {
-            GameObject note = notesArrays[track, xPos + 5];
+            RaycastHit2D ray = Physics2D.Raycast(pos, Vector2.zero, 500f);
             
-            note.transform.position = new Vector3(xPos, tracksPositions[track], 0);
-            
-            if (noteType == NoteType.Short)
-                NoteUpdateVisuals(note, noteShortPrefab);
-            if (noteType == NoteType.LongBegin)
-                NoteUpdateVisuals(note, noteLongBegPrefab);
-            if (noteType == NoteType.LongEnd)
-                NoteUpdateVisuals(note, noteLongEndPrefab);
-            
-            note.SetActive(true);
+            if (ray.collider == null || !ray.transform.CompareTag("Note"))
+                return null;
+
+            return ray.transform.gameObject;
         }
 
-        void NoteUpdateVisuals(GameObject note, GameObject prefab)
+        // function called externally by Event
+        public void ClearTracks()
         {
-            var noteSR = note.GetComponent<SpriteRenderer>();
-            var prefabSR = prefab.GetComponent<SpriteRenderer>();
-            noteSR.sprite = prefabSR.sprite;
-            noteSR.color = prefabSR.color;
+            if (trackList == null)
+                return;
+
+            Debug.Log("Clearing Tracks");
+
+            for (int i = 0; i < trackList.Count; i++) 
+            {
+                foreach (var note in trackList[i])
+                    Destroy(note);
+                trackList[i].Clear();
+            }
         }
 
+        public void DeleteNote() // TODO usuwanie nuty
+        {
+
+        }
     }
-
 }
