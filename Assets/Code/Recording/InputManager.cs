@@ -15,6 +15,7 @@ namespace Recording.InputManager
         private float[] pushTimers = new float[5];
         private float[] addNotePositions = new float[5];
         private bool[] longNotesBeginAdded = {false, false, false, false, false};
+        private const float BOTTOM_BORDER = -4.6f, UPPER_BORDER = 2.1f;
         public float noteDelay = 0.175f;
         private bool inputEnabled = false;
 
@@ -58,7 +59,7 @@ namespace Recording.InputManager
             if (Input.GetMouseButtonDown(0))
                 MouseSingleClick(mousePosition);
             if (Input.GetMouseButton(0))
-                MousePushDown(mousePosition);
+                MouseHold(mousePosition);
             if (Input.GetMouseButtonUp(0))
                 MouseRelease(mousePosition);
         }
@@ -66,6 +67,7 @@ namespace Recording.InputManager
         private void MouseSingleClick(Vector3 mousePosition)
         {
             recorder.PauseSong();
+            Debug.Log(mousePosition);
 
             GameObject clickedNote = noteRenderer.IsNoteThere(mousePosition);
 
@@ -74,9 +76,10 @@ namespace Recording.InputManager
                 notesHandler.Deselect();
             }
 
-            if (mousePosition.y < -4.25f || mousePosition.y > 1.5f)
+            if (mousePosition.y < BOTTOM_BORDER || mousePosition.y > UPPER_BORDER)
             {
                 notesHandler.Deselect();
+                isSelecting = false;
                 return;
             }
 
@@ -90,12 +93,15 @@ namespace Recording.InputManager
             }
         }
 
-        private void MousePushDown(Vector3 mousePosition)
+        private void MouseHold(Vector3 mousePosition)
         {
-            if (!isSelecting && !notesHandler.IsEmpty())
-                notesHandler.Move(mousePosition);
-            else
+            if (mousePosition.y < BOTTOM_BORDER || mousePosition.y > UPPER_BORDER)
+                return;
+            
+            if (isSelecting)
                 SelectingBox(mousePosition);
+            else if (!notesHandler.IsEmpty())
+                notesHandler.Move(mousePosition);
         }
 
         void SelectingBox(Vector3 mousePosition)
