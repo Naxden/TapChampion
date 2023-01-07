@@ -1,11 +1,12 @@
 using UnityEngine;
 using Saving.Note;
-using Recording.Note.Selectable;
 
 namespace Recording.InputManager
 {
     public class InputManager : MonoBehaviour
     {
+        [SerializeField]
+        private Camera MainCamera; 
         [SerializeField]
         private Recorder recorder;
         [SerializeField]
@@ -17,7 +18,12 @@ namespace Recording.InputManager
         public float noteDelay = 0.175f;
         private bool inputEnabled = false;
 
-        private GameObject selectedNote;
+        [SerializeField]
+        private NotesHandler.NotesHandler notesHandler;
+        private Vector3 startMousePos = Vector3.zero;
+        [SerializeField]
+        private Transform selectionBox;
+        private bool isSelecting = false;    
 
         // function called externally by Event
         public void EnableInput()
@@ -40,12 +46,14 @@ namespace Recording.InputManager
                 CheckButtonsInput();
 
                 CheckSpaceInput();
+
+                if (Input.GetKeyDown(KeyCode.Escape)) { Debug.Break(); }
             }
         }
 
         private void CheckMouseInput()
         {
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 mousePosition = MainCamera.ScreenToWorldPoint(Input.mousePosition);
 
             if (Input.GetMouseButtonDown(0))
                 MouseSingleClick(mousePosition);
@@ -59,43 +67,68 @@ namespace Recording.InputManager
         {
             recorder.PauseSong();
 
-            if (selectedNote != null)
-                selectedNote.GetComponent<Selectable>().Deselect();
+            GameObject clickedNote = noteRenderer.IsNoteThere(mousePosition);
+
+            if (!notesHandler.IsEmpty() && !notesHandler.IsChild(clickedNote))
+            {
+                notesHandler.Deselect();
+            }
 
             if (mousePosition.y < -4.25f || mousePosition.y > 1.5f)
+            {
+                notesHandler.Deselect();
                 return;
-
-            selectedNote = noteRenderer.IsNoteThere(mousePosition);
-
-            if (selectedNote != null)
-            {
-                selectedNote.GetComponent<Selectable>().Select();
             }
-            else
+
+            notesHandler.SetStartPosition(mousePosition);
+            notesHandler.AddChild(clickedNote);
+
+            if (notesHandler.IsEmpty())
             {
-                Debug.Log(mousePosition);
-                noteRenderer.AddNote(mousePosition, NoteType.LongEnd);
+                startMousePos = mousePosition;
+                isSelecting = true;
             }
         }
 
         private void MousePushDown(Vector3 mousePosition)
         {
-            if (mousePosition.y < -4.25f || mousePosition.y > 1.5f)
-                return;
+            if (!isSelecting && !notesHandler.IsEmpty())
+                notesHandler.Move(mousePosition);
+            else
+                SelectingBox(mousePosition);
+        }
 
-            if (selectedNote != null)
-                selectedNote.GetComponent<Selectable>().Move(mousePosition);
+        void SelectingBox(Vector3 mousePosition)
+        {
+            Vector3 lowerLeft = new Vector3(
+                Mathf.Min(startMousePos.x, mousePosition.x),
+                Mathf.Min(startMousePos.y, mousePosition.y),
+                10f);
+            Vector3 upperRight = new Vector3(
+                Mathf.Max(startMousePos.x, mousePosition.x),
+                Mathf.Max(startMousePos.y, mousePosition.y));
+
+            selectionBox.position = lowerLeft;
+            selectionBox.localScale = upperRight - lowerLeft;
         }
 
         private void MouseRelease(Vector3 mousePosition)
         {
-            if (mousePosition.y < -4.25f || mousePosition.y > 1.5f)
-                return;
+            notesHandler.MoveEnded();
+
+            isSelecting = false;
+            ResetSelectingBox();
+        }
+
+        void ResetSelectingBox()
+        {
+            selectionBox.localScale = new Vector3(0.01f, 0.01f);
+            selectionBox.position = new Vector3(-7f, 0f, 10f);
         }
 
         private void CheckButtonsInput()
         {
-            float xPosition = transform.position.x;
+            float xPosition = MainCamera.transform.position.x;
             
             for (int i = 0; i < 5; i++)
             {
@@ -143,12 +176,22 @@ namespace Recording.InputManager
             }
         }
 
-        // function called externally by Silder's Event
-        public void MoveCamera(float time)
+        private void OnTriggerEnter2D(Collider2D collision)
         {
-            time *= 10;
-            transform.position = new Vector3(time, 0f, -10f);
+            if (collision == null)
+                return;
+
+            if (collision.CompareTag("Note"))
+                notesHandler.AddChild(collision.gameObject);
         }
 
+        private void OnTriggerExit2D(Collider2D collision)
+        {
+            if (collision == null)
+                return;
+
+            if (collision.CompareTag("Note") && isSelecting)
+                notesHandler.RemoveChild(collision.gameObject);
+        }
     }
 }
