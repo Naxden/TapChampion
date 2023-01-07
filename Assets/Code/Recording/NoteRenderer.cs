@@ -52,7 +52,7 @@ namespace Recording.NoteRenderer
                 }
             }
 
-            xPos = Mathf.Round((float)xPos / 0.75f) * 0.75f - 0.5f;
+            xPos = Mathf.Ceil(xPos / 0.75f) * 0.75f - 0.5f;
             Vector3 newPos = new Vector3(xPos, tracksPositions[track]);
 
             if (IsNoteThere(newPos) != null)
