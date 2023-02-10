@@ -15,20 +15,20 @@ namespace Recording
     public class Recorder : MonoBehaviour
     {
 #region Private Variables 
-        string songPath, imagePath;
+        private string songPath, imagePath;
 
         [SerializeField]
-        AudioSource audioSource;
+        private AudioSource audioSource;
 
         [SerializeField]
-        AudioMixer audioMixer;
+        private AudioMixer audioMixer;
 
         [SerializeField]
-        SpriteRenderer spriteRenderer;
+        private SpriteRenderer spriteRenderer;
 
-        bool songLoaded = false;
+        public bool songLoaded { get; private set; } = false;
         public bool songIsPlaying { get; private set; } = false;
-        bool songExists = false;
+        private bool songExists = false;
 
         [SerializeField]
         private MyFloatEvent OnSongLoad;
@@ -38,40 +38,40 @@ namespace Recording
 
 
         [SerializeField]
-        NoteFile songNoteFile = new NoteFile();
+        private NoteFile songNoteFile = new NoteFile();
 #endregion
 #region Control button
         [SerializeField, Header("Control buttons")]
-        Button playButton;
+        private Button playButton;
 
         [SerializeField]
-        Button pauseButton;
+        private Button pauseButton;
 
         [SerializeField]
-        Button stopButton;
+        private Button stopButton;
 
         [SerializeField]
-        Slider slider;
+        private Slider slider;
 
         [SerializeField]
-        Button importImageButton;
+        private Button importImageButton;
 #endregion
 #region Song Timers
         [SerializeField, Header("Song timers")]
-        TextMeshProUGUI currentTime;
+        private TextMeshProUGUI currentTime;
 
         [SerializeField]
-        TextMeshProUGUI songLength;
+        private TextMeshProUGUI songLength;
 #endregion
 #region Song Input Data
         [SerializeField, Header("Song Input Data")]
-        TMP_InputField songTitleInput;
+        private TMP_InputField songTitleInput;
 
         [SerializeField]
-        TMP_InputField songAuthorInput;
+        private TMP_InputField songAuthorInput;
 
         [SerializeField]
-        TMP_InputField songYearInput;
+        private TMP_InputField songYearInput;
 #endregion
 
         
