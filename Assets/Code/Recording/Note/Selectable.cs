@@ -4,25 +4,25 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 
-namespace Recording.Note.Selectable
+namespace Recording.Note
 {
     public class Selectable : MonoBehaviour
     {
         public Color initialColor;
-        private SpriteRenderer spriteRenderer;
+        private SpriteRenderer mySpriteRenderer;
         private Vector3 initialPosition;
         private Rigidbody2D myRigidbody2D;
 
-        private NotesHandler.NotesHandler notesHandler;
         private bool isSelected = false;
+        private bool isColliding = false;
+        private bool longNoteError = false;
 
         private void OnEnable()
         {
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            initialColor = spriteRenderer.color;
+            mySpriteRenderer = GetComponent<SpriteRenderer>();
+            initialColor = mySpriteRenderer.color;
             initialPosition = transform.position;
 
-            notesHandler = FindObjectOfType<NotesHandler.NotesHandler>();
         }
 
         public void Select()
@@ -30,22 +30,23 @@ namespace Recording.Note.Selectable
             if (myRigidbody2D == null) 
                 myRigidbody2D = transform.AddComponent<Rigidbody2D>();
             myRigidbody2D.isKinematic = true;
-            spriteRenderer.color = Color.blue;
-            spriteRenderer.sortingOrder = 5;
+            mySpriteRenderer.color = Color.blue;
+            mySpriteRenderer.sortingOrder = 5;
             initialPosition = transform.position;
             isSelected = true;
         }
 
-        private void OnTriggerEnter2D(Collider2D collision)
+
+        private void OnTriggerStay2D(Collider2D collision)
         {
             if (collision == null) 
                 return;
 
             if (isSelected && collision.transform.CompareTag("Note"))
             {
-                spriteRenderer.color = Color.red;
+                isColliding = true;
 
-                notesHandler.NoteErrorOccurred();
+                UpdateVisuals();
             }
         }
 
@@ -53,23 +54,49 @@ namespace Recording.Note.Selectable
         {
             if (isSelected)
             {
-                spriteRenderer.color = Color.blue;
+                isColliding = false;
 
-                notesHandler.NoteErrorResolved();
+                UpdateVisuals();
             }
+        }
+
+        public void SetLongNoteError(bool condition)
+        {
+            longNoteError = condition;
+        }
+
+        public bool DoesFit()
+        {
+            return !isColliding && !longNoteError;
+        }
+
+        public void UpdateVisuals()
+        {
+            if (DoesFit())
+                mySpriteRenderer.color = Color.blue;
+            else
+                mySpriteRenderer.color = Color.red;
         }
 
         public void ResetPosition()
         {
             transform.position = initialPosition;
-            spriteRenderer.color = Color.blue;
+            isColliding = false;
+            if (longNoteError)
+            {
+                longNoteError = false;
+                GetComponent<LongNote>().MoveLongNote();
+            }
+            UpdateVisuals();
         }
 
         public void Deselect()
         {
-            spriteRenderer.color = initialColor;
-            spriteRenderer.sortingOrder = 0;
+            mySpriteRenderer.color = initialColor;
+            mySpriteRenderer.sortingOrder = 0;
             isSelected = false;
+            isColliding = false;
+            longNoteError = false;
             Destroy(myRigidbody2D);
         }
     }
