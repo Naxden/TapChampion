@@ -1,6 +1,6 @@
-using Recording.Note.Selectable;
+using Recording.Note;
+using System.Collections.Generic;
 using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace Recording.NotesHandler
@@ -10,7 +10,9 @@ namespace Recording.NotesHandler
         [SerializeField]
         private GameObject NotesRenderer;
 
-        private bool notesError = false;
+        [SerializeField]
+        private List<LongNote> longNotes;
+
         private bool firstSnap = true;
 
         public void SetStartPosition(Vector3 position)
@@ -41,6 +43,10 @@ namespace Recording.NotesHandler
 
             note.transform.parent = transform;
             note.GetComponent<Selectable>().Select();
+
+            LongNote longNote = note.GetComponent<LongNote>();
+            if (longNote != null)
+                longNotes.Add(longNote);
         }
 
         public void RemoveChild(GameObject note)
@@ -52,6 +58,10 @@ namespace Recording.NotesHandler
 
             note.GetComponent<Selectable>().Deselect();
             note.transform.parent = NotesRenderer.transform;
+
+            LongNote longNote = note.transform.GetComponent<LongNote>();
+            if (longNote != null)
+                longNotes.Remove(longNote);
         }
 
         public bool IsChild(GameObject note)
@@ -92,6 +102,7 @@ namespace Recording.NotesHandler
                     newPosition.y = transform.position.y;
 
             transform.position = newPosition;
+            UpdateLongNotes();
         }
 
         private float MinMoveRange()
@@ -116,14 +127,23 @@ namespace Recording.NotesHandler
             return max;
         }
 
-        public void NoteErrorOccurred()
+        private void UpdateLongNotes()
         {
-            notesError = true;
+            foreach (LongNote longNote in longNotes)
+            {
+                longNote.MoveLongNote();
+            }
         }
 
-        public void NoteErrorResolved()
+        private bool DoesNotesFit()
         {
-            notesError = false;
+            foreach (Transform child in transform)
+            {
+                if (!child.GetComponent<Selectable>().DoesFit())
+                    return false;
+            }
+
+            return true;
         }
 
         public bool IsEmpty()
@@ -133,7 +153,7 @@ namespace Recording.NotesHandler
 
         public void MoveEnded()
         {
-            if (notesError)
+            if (!DoesNotesFit())
             {
                 foreach (Transform child in transform)
                 {
@@ -151,6 +171,8 @@ namespace Recording.NotesHandler
                 child.GetComponent<Selectable>().Deselect();
                 child.parent = NotesRenderer.transform;
             }
+
+            longNotes.Clear();
 
             transform.position = Vector3.zero;
             firstSnap = true;

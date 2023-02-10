@@ -1,5 +1,7 @@
 using UnityEngine;
 using Saving.Note;
+using System;
+using UnityEngine.UIElements;
 
 namespace Recording.InputManager
 {
@@ -7,14 +9,18 @@ namespace Recording.InputManager
     {
         [SerializeField]
         private Camera MainCamera; 
+
         [SerializeField]
         private Recorder recorder;
+
         [SerializeField]
         private NoteRenderer.NoteRenderer noteRenderer;
+
         private KeyCode[] keys = {KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L};
         private float[] pushTimers = new float[5];
         private float[] addNotePositions = new float[5];
-        private bool[] longNotesBeginAdded = {false, false, false, false, false};
+        private const float FPOSTION = -25f;
+        private float[] longNotesBeginPosition = { FPOSTION, FPOSTION, FPOSTION, FPOSTION, FPOSTION };
         private const float BOTTOM_BORDER = -4.6f, UPPER_BORDER = 2.1f;
         public float noteDelay = 0.175f;
         private bool inputEnabled = false;
@@ -67,7 +73,6 @@ namespace Recording.InputManager
         private void MouseSingleClick(Vector3 mousePosition)
         {
             recorder.PauseSong();
-            Debug.Log(mousePosition);
 
             GameObject clickedNote = noteRenderer.IsNoteThere(mousePosition);
 
@@ -104,7 +109,7 @@ namespace Recording.InputManager
                 notesHandler.Move(mousePosition);
         }
 
-        void SelectingBox(Vector3 mousePosition)
+        private void SelectingBox(Vector3 mousePosition)
         {
             Vector3 lowerLeft = new Vector3(
                 Mathf.Min(startMousePos.x, mousePosition.x),
@@ -126,7 +131,7 @@ namespace Recording.InputManager
             ResetSelectingBox();
         }
 
-        void ResetSelectingBox()
+        private void ResetSelectingBox()
         {
             selectionBox.localScale = new Vector3(0.01f, 0.01f);
             selectionBox.position = new Vector3(-7f, 0f, 10f);
@@ -134,27 +139,32 @@ namespace Recording.InputManager
 
         private void CheckButtonsInput()
         {
+            if (!recorder.songIsPlaying)
+                return;
+
             float xPosition = MainCamera.transform.position.x;
             
             for (int i = 0; i < 5; i++)
             {
-                if (!longNotesBeginAdded[i] && pushTimers[i] > noteDelay)
+                if (longNotesBeginPosition[i] == FPOSTION && pushTimers[i] > noteDelay)
                 {
                     PlaceNoteByKey(i, true);
-                    longNotesBeginAdded[i] = true;
                 }
+
                 if (Input.GetKeyDown(keys[i]))
                     addNotePositions[i] = xPosition - 5f;
+
                 if (Input.GetKey(keys[i]))
                     pushTimers[i] += Time.deltaTime;
+
                 if (Input.GetKeyUp(keys[i]))
                 {
-                    if (longNotesBeginAdded[i])
+                    if (longNotesBeginPosition[i] != FPOSTION)
                         addNotePositions[i] = xPosition - 5f;
 
                     PlaceNoteByKey(i, false);
                     pushTimers[i] = 0f;
-                    longNotesBeginAdded[i] = false;
+                    longNotesBeginPosition[i] = FPOSTION;
                 }
             }
         }
@@ -168,10 +178,35 @@ namespace Recording.InputManager
                                 (pushTimers[keyIndex] <= noteDelay) ? 
                                 NoteType.Short : NoteType.LongEnd;
 
-            noteRenderer.AddNote(position, noteType);
+            
+            if (noteType == NoteType.LongBegin)
+                longNotesBeginPosition[keyIndex] = position.x;
+
+            if (noteType == NoteType.LongEnd) 
+            {
+                Vector3 longBeginPos = new Vector3(longNotesBeginPosition[keyIndex], 
+                                                   position.y, 
+                                                   0f);
+                if (longBeginPos.x == FPOSTION)
+                    return;
+                if (noteRenderer.IsNoteBetween(longBeginPos, position))
+                {
+                    noteRenderer.DeleteNote(longBeginPos);
+                    return;
+                }
+            }
+
+            bool noteAdded = noteRenderer.TryAddNote(position, noteType);
+
+            if (!noteAdded && noteType == NoteType.LongBegin)
+            {
+                pushTimers[keyIndex] = 0;
+                longNotesBeginPosition[keyIndex] = FPOSTION;
+            }
+
         }
 
-        void CheckSpaceInput()
+        private void CheckSpaceInput()
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -186,8 +221,8 @@ namespace Recording.InputManager
         {
             if (collision == null)
                 return;
-
-            if (collision.CompareTag("Note"))
+           
+            if (collision.GetType() == typeof(CircleCollider2D) && collision.CompareTag("Note"))
                 notesHandler.AddChild(collision.gameObject);
         }
 
@@ -196,7 +231,7 @@ namespace Recording.InputManager
             if (collision == null)
                 return;
 
-            if (collision.CompareTag("Note") && isSelecting)
+            if (isSelecting && collision.GetType() == typeof(CircleCollider2D) && collision.CompareTag("Note"))
                 notesHandler.RemoveChild(collision.gameObject);
         }
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 using Saving.Note;
 using System;
 using UnityEngine.UIElements;
-
+using Recording.Note;
 
 namespace Recording.NoteRenderer
 {
@@ -30,14 +30,48 @@ namespace Recording.NoteRenderer
                 trackList.Add(new Track(128)); // using some initial value as size of list
         }
 
-        public void AddNote(Vector3 notePos, NoteType noteType)
+        public bool TryAddNote(Vector3 notePos, NoteType noteType)
         {
             float xPos = notePos.x;
             float yPos = notePos.y;
 
             if (yPos < -4.25f || yPos > 1.5f || xPos < -5f || xPos > (songLength * 10) - 5f)
-                return;
+                return false;
 
+            int track = WhichTrack(yPos);
+
+            xPos = Mathf.Ceil(xPos / 0.75f) * 0.75f - 0.5f;
+            Vector3 newPos = new Vector3(xPos, tracksPositions[track]);
+
+            if (IsNoteThere(newPos) != null)
+                return false;
+
+            Debug.Log(newPos);
+            GameObject note = Instantiate(notePrefabs[(int)noteType], newPos, Quaternion.identity);
+            note.transform.SetParent(transform, false);
+
+            trackList[track].Add(note);
+            
+            if (noteType == NoteType.LongEnd) 
+            {
+                int indexOfLastNote = trackList[track].Count - 2;
+                if (indexOfLastNote < 0)
+                {
+                    Debug.LogWarning("Adding connection, Begin-End notes, index less than zero");
+                    return false;
+                }
+                
+                LongNote longBegin = trackList[track][indexOfLastNote].transform.GetComponent<LongNote>();
+                longBegin.SetOtherHalf(note);
+                note.GetComponent<LongNote>().SetOtherHalf(longBegin.gameObject);
+                longBegin.InitializePair();
+            }
+
+            return true;
+        }
+
+        private int WhichTrack(float yPos)
+        {
             int track = 0;
             float distance = Mathf.Abs(yPos - tracksPositions[track]);
 
@@ -52,16 +86,7 @@ namespace Recording.NoteRenderer
                 }
             }
 
-            xPos = Mathf.Ceil(xPos / 0.75f) * 0.75f - 0.5f;
-            Vector3 newPos = new Vector3(xPos, tracksPositions[track]);
-
-            if (IsNoteThere(newPos) != null)
-                return;
-
-            GameObject note = Instantiate(notePrefabs[(int)noteType], newPos, Quaternion.identity);
-            note.transform.SetParent(transform, false);
-            
-            trackList[track].Add(note);    
+            return track;
         }
 
         public GameObject IsNoteThere(Vector3 pos)
@@ -72,6 +97,25 @@ namespace Recording.NoteRenderer
                 return null;
 
             return ray.transform.gameObject;
+        }
+
+        public bool IsNoteBetween(Vector3 pos1, Vector3 pos2)
+        {
+            pos1.x = Mathf.Ceil(pos1.x / 0.75f) * 0.75f - 0.5f;
+            pos2.x = Mathf.Ceil(pos2.x / 0.75f) * 0.75f - 0.5f;
+
+            Vector3 checkingPos = pos1;
+
+            for (float x = pos1.x + 0.75f; x <= pos2.x; x += 0.75f)
+            {
+                checkingPos.x = x;
+                if (IsNoteThere(checkingPos) != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // function called externally by Event
@@ -90,9 +134,18 @@ namespace Recording.NoteRenderer
             }
         }
 
-        public void DeleteNote() // TODO usuwanie nuty
+        public void DeleteNote(Vector3 position) // TODO usuwanie nuty
         {
+            position.x = Mathf.Ceil(position.x / 0.75f) * 0.75f - 0.5f; ;
+            GameObject deleteNote = IsNoteThere(position);
 
+            if (deleteNote == null)
+                return;
+
+            int track = WhichTrack(position.y);
+
+            trackList[track].Remove(deleteNote);
+            Destroy(deleteNote);
         }
     }
 }
