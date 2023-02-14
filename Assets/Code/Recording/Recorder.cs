@@ -1,11 +1,10 @@
 using System.Collections;
 using UnityEngine;
-using Saving.SavingSystem;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Audio;
 using UnityEngine.Events;
-using Saving.Note;
+using Saving;
 
 namespace Recording
 {
@@ -175,7 +174,7 @@ namespace Recording
 
         private void LoadExistingSong(string songTitle)
         {
-            string songDirPath = FileManager.GetPath("/Songs/" + songTitle);
+            string songDirPath = FileManager.GetPath("Songs/" + songTitle);
 
             spriteRenderer.sprite = FileManager.GetSprite(songDirPath + $"/{songTitle}.png");
             

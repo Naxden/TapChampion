@@ -78,6 +78,11 @@ namespace Recording.Note
                 mySpriteRenderer.color = Color.red;
         }
 
+        public Vector3 GetInitialPosition()
+        {
+            return initialPosition;
+        }
+
         public void ResetPosition()
         {
             transform.position = initialPosition;

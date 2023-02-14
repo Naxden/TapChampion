@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Saving.Note;
+using Saving;
 using System;
 using UnityEngine.UIElements;
 using Recording.Note;
 
-namespace Recording.NoteRenderer
+namespace Recording
 {
     using Track = List<GameObject>;
 
@@ -16,7 +16,7 @@ namespace Recording.NoteRenderer
 
         private float[] tracksPositions = {1.25f, 0f, -1.25f, -2.5f, -3.75f};
 
-        private List<Track> trackList;
+        private List<Track> tracksList;
         private float songLength;
 
         // function called externally by Event
@@ -24,10 +24,10 @@ namespace Recording.NoteRenderer
         {
             this.songLength = songLength;
 
-            trackList = new List<Track>(5);
+            tracksList = new List<Track>(5);
 
             for (int i = 0; i < 5; i++)
-                trackList.Add(new Track(128)); // using some initial value as size of list
+                tracksList.Add(new Track(128)); // using some initial value as size of list
         }
 
         public bool TryAddNote(Vector3 notePos, NoteType noteType)
@@ -46,22 +46,21 @@ namespace Recording.NoteRenderer
             if (IsNoteThere(newPos) != null)
                 return false;
 
-            Debug.Log(newPos);
             GameObject note = Instantiate(notePrefabs[(int)noteType], newPos, Quaternion.identity);
             note.transform.SetParent(transform, false);
 
-            trackList[track].Add(note);
+            tracksList[track].Add(note);
             
             if (noteType == NoteType.LongEnd) 
             {
-                int indexOfLastNote = trackList[track].Count - 2;
-                if (indexOfLastNote < 0)
+                int indexOfPreLastNote = tracksList[track].Count - 2;
+                if (indexOfPreLastNote < 0)
                 {
                     Debug.LogWarning("Adding connection, Begin-End notes, index less than zero");
                     return false;
                 }
                 
-                LongNote longBegin = trackList[track][indexOfLastNote].transform.GetComponent<LongNote>();
+                LongNote longBegin = tracksList[track][indexOfPreLastNote].transform.GetComponent<LongNote>();
                 longBegin.SetOtherHalf(note);
                 note.GetComponent<LongNote>().SetOtherHalf(longBegin.gameObject);
                 longBegin.InitializePair();
@@ -121,20 +120,20 @@ namespace Recording.NoteRenderer
         // function called externally by Event
         public void ClearTracks()
         {
-            if (trackList == null)
+            if (tracksList == null)
                 return;
 
             Debug.Log("Clearing Tracks");
 
-            for (int i = 0; i < trackList.Count; i++) 
+            for (int i = 0; i < tracksList.Count; i++) 
             {
-                foreach (var note in trackList[i])
+                foreach (var note in tracksList[i])
                     Destroy(note);
-                trackList[i].Clear();
+                tracksList[i].Clear();
             }
         }
 
-        public void DeleteNote(Vector3 position) // TODO usuwanie nuty
+        public void DeleteNote(Vector3 position)
         {
             position.x = Mathf.Ceil(position.x / 0.75f) * 0.75f - 0.5f; ;
             GameObject deleteNote = IsNoteThere(position);
@@ -144,8 +143,25 @@ namespace Recording.NoteRenderer
 
             int track = WhichTrack(position.y);
 
-            trackList[track].Remove(deleteNote);
+            tracksList[track].Remove(deleteNote);
             Destroy(deleteNote);
+        }
+
+        public void MoveNoteToDifferentTrack(Transform noteToMove)
+        {
+            Vector3 noteInitPos = noteToMove.GetComponent<Selectable>().GetInitialPosition();
+            int initTrack = WhichTrack(noteInitPos.y);
+            int targetTrack = WhichTrack(noteToMove.position.y);
+
+
+            if (initTrack == targetTrack)
+                return;
+
+
+            if (!tracksList[initTrack].Remove(noteToMove.gameObject))
+                Debug.LogWarning($"Failed removing {noteToMove.name} from track {initTrack}");
+
+            tracksList[targetTrack].Add(noteToMove.gameObject);
         }
     }
 }

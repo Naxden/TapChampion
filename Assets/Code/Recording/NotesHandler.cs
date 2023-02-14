@@ -1,14 +1,14 @@
-using Recording.Note;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using Recording.Note;
 
-namespace Recording.NotesHandler
+namespace Recording
 {
     public class NotesHandler : MonoBehaviour
     {
         [SerializeField]
-        private GameObject NotesRenderer;
+        private NoteRenderer noteRenderer;
 
         [SerializeField]
         private List<LongNote> longNotes;
@@ -57,7 +57,7 @@ namespace Recording.NotesHandler
                 return;
 
             note.GetComponent<Selectable>().Deselect();
-            note.transform.parent = NotesRenderer.transform;
+            note.transform.parent = noteRenderer.transform;
 
             LongNote longNote = note.transform.GetComponent<LongNote>();
             if (longNote != null)
@@ -168,8 +168,10 @@ namespace Recording.NotesHandler
             {
                 Transform child = transform.GetChild(0);
 
+                noteRenderer.MoveNoteToDifferentTrack(child);
+
                 child.GetComponent<Selectable>().Deselect();
-                child.parent = NotesRenderer.transform;
+                child.parent = noteRenderer.transform;
             }
 
             longNotes.Clear();

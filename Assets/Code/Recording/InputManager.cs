@@ -1,5 +1,5 @@
 using UnityEngine;
-using Saving.Note;
+using Saving;
 using System;
 using UnityEngine.UIElements;
 
@@ -14,7 +14,7 @@ namespace Recording.InputManager
         private Recorder recorder;
 
         [SerializeField]
-        private NoteRenderer.NoteRenderer noteRenderer;
+        private NoteRenderer noteRenderer;
 
         private KeyCode[] keys = {KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L};
         private float[] pushTimers = new float[5];
@@ -26,7 +26,7 @@ namespace Recording.InputManager
         private bool inputEnabled = false;
 
         [SerializeField]
-        private NotesHandler.NotesHandler notesHandler;
+        private NotesHandler notesHandler;
         private Vector3 startMousePos = Vector3.zero;
         [SerializeField]
         private Transform selectionBox;
