@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Saving.Note
+namespace Saving
 {
     [System.Serializable]
     public class NoteFile
@@ -34,11 +34,6 @@ namespace Saving.Note
         Short,
         LongBegin, LongEnd
     };
-    
-    public enum Difficulty
-    {
-        EASY, MEDIUM, HARD
-    }
 }
 
 

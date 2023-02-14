@@ -1,14 +1,12 @@
 using UnityEngine;
 using System.IO;
-using Saving.Note;
 using UnityEditor;
 using System;
 using UnityEngine.Networking;
 using System.Collections;
 using SimpleFileBrowser;
-using static SimpleFileBrowser.FileBrowser;
 
-namespace Saving.SavingSystem
+namespace Saving
 {
     public static class FileManager
     {
@@ -60,12 +58,12 @@ namespace Saving.SavingSystem
 
         public static Sprite GetSprite(string path)
         {
-            byte[] buffor = ReadBinaryFile(path);
+            byte[] buffer = ReadBinaryFile(path);
 
-            if (buffor != null)
+            if (buffer != null)
             {
                 Texture2D texture2D = new Texture2D(2, 2);
-                texture2D.LoadImage(buffor);
+                texture2D.LoadImage(buffer);
 
                 Sprite sprite = Sprite.Create(texture2D,
                                               new Rect(0.0f, 0.0f, texture2D.width, texture2D.height),
@@ -91,7 +89,7 @@ namespace Saving.SavingSystem
 
         public static string GetPath(string fileName)
         {
-            return Directory.GetCurrentDirectory() + fileName;
+            return Directory.GetCurrentDirectory() + '/' + fileName;
         }
 
         private static string ReadFile(string path)
@@ -131,7 +129,7 @@ namespace Saving.SavingSystem
 
         public static bool DoesSongExist(string songName)
         {
-            return Directory.Exists(GetPath("/Songs/") + songName);
+            return Directory.Exists(GetPath("Songs/") + songName);
         } 
 
         public static void FileDialogInitialize()
@@ -139,8 +137,8 @@ namespace Saving.SavingSystem
             FileBrowser.SetFilters(true, new FileBrowser.Filter("TapChapmpion", ".tapch"),
                                          new FileBrowser.Filter("Images", ".jpg", ".png"),
                                          new FileBrowser.Filter("Music", ".mp3"));
-            FileBrowser.AddQuickLink("Downloads", GetPath("/Downloads"));
-            FileBrowser.AddQuickLink("Songs", GetPath("/Songs"));
+            FileBrowser.AddQuickLink("Downloads", GetPath("Downloads"));
+            FileBrowser.AddQuickLink("Songs", GetPath("Songs"));
             loadDialogInitialized = true;
         }
 
@@ -164,7 +162,7 @@ namespace Saving.SavingSystem
 
             SetDefaultFilter(extension);
             FileBrowser.ShowLoadDialog(onSuccess, onCancel, FileBrowser.PickMode.Files, 
-                                        false, GetPath("/Downloads"), null, label);
+                                        false, GetPath("Downloads"), null, label);
         }
         public static void SetDefaultFilter(FileExtension fileExtension)
         {
@@ -220,40 +218,80 @@ namespace Saving.SavingSystem
 
         }
 
+        public static UserSettings GetUserSettings()
+        {
+            UserSettings userSettings;
+            string content = ReadFile(GetPath("userSettings.json"));
+
+            if (content == null)
+            {
+                Debug.LogWarning("GetDifficulty: Couldn't open userSettings");
+                return null;
+            }
+
+            userSettings = JsonUtility.FromJson<UserSettings>(content);
+
+            if (userSettings == null)
+            {
+                Debug.LogWarning("GetUserSettings: Failed to convert from .json");
+            }
+
+            return userSettings;
+        }
+
+        public static void WriteUserSettings(UserSettings userSettings)
+        {
+            string content;
+
+            content = JsonUtility.ToJson(userSettings, true);
+            
+            if (content == null)
+            {
+                Debug.LogWarning("WriteUserSettings: Failed to convert to json String");
+            }
+
+            string path = GetPath("userSettings.json");
+            WriteFile(path, content);
+        }
+
         private static NoteFile StringToNoteFile(string content)
         {
             NoteFile noteFile = JsonUtility.FromJson<NoteFile>(content);
 
-            if (noteFile != null)
-                return noteFile;
+            if (noteFile == null)
+            {
+                Debug.LogWarning("StringToNoteFile: Couldn't convert to NoteFile properly");
+                return null;
+            }
 
-            Debug.LogWarning("StringToNoteFile: Couldn't convert to NoteFile properly");
-            return null;
+            return noteFile;
         }
 
         private static string NoteFileToString(NoteFile noteFile)
         {
-            if (noteFile != null)
-                return JsonUtility.ToJson(noteFile, true);
+            if (noteFile == null)
+            {
+                Debug.LogWarning("NoteFileToString: Couldn't convert to JsonString properly");
+                return null;
+            }
 
-            Debug.LogWarning("NoteFileToString: Couldn't convert to JsonString properly");
-            return null;
+            return JsonUtility.ToJson(noteFile, true);
         }
 
         private static void WriteSpriteFile(string path, string content)
         {
-            byte[] buffor = Convert.FromBase64String(
+            byte[] buffer = Convert.FromBase64String(
                 GetPartOfString(content, SPRITE_BEGIN, SPRITE_END));
 
-            WriteBinaryFile(path, buffor);
+            WriteBinaryFile(path, buffer);
         }
 
         public static void WriteMusicFile(string path, string content)
         {
-            byte[] buffor = Convert.FromBase64String(
+            byte[] buffer = Convert.FromBase64String(
                 GetPartOfString(content, MUSIC_BEGIN, MUSIC_END));
 
-            WriteBinaryFile(path, buffor);
+            WriteBinaryFile(path, buffer);
         }
 
         private static string SetSongDirectory(string songTitle)
@@ -262,6 +300,7 @@ namespace Saving.SavingSystem
 
             if (!Directory.Exists(targetPath))
                 Directory.CreateDirectory(targetPath);
+
             return targetPath;
         }
     }
