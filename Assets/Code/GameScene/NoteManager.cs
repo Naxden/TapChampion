@@ -1,11 +1,9 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using GameScene.Player.Button;
-using Saving.Note;
-using GameScene.UI.UIController;
+using Saving;
 
-namespace GameScene.Notes.NoteManager
+namespace GameScene
 {
     public class NoteManager : MonoBehaviour
     {

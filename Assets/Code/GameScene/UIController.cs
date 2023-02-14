@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-namespace GameScene.UI.UIController
+namespace GameScene
 {
     public class UIController : MonoBehaviour
     {

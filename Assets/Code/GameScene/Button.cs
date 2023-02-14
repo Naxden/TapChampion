@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
-using GameScene.Notes;
-using GameScene.Notes.NoteManager;
-using Saving.Note;
+using Saving;
 
-namespace GameScene.Player.Button
+namespace GameScene
 {
     public class Button : MonoBehaviour
     {

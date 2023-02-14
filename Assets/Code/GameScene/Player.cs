@@ -1,12 +1,9 @@
 using UnityEngine;
-using GameScene.UI.UIController;
-using Saving.Note;
 using System.Collections.Generic;
-using GameScene.Notes.NoteManager;
 using System.Collections;
-using Saving.SavingSystem;
+using Saving;
 
-namespace GameScene.Player
+namespace GameScene
 {
     public class Player : MonoBehaviour
     {
@@ -83,7 +80,7 @@ namespace GameScene.Player
 
         IEnumerator SongInitializeRoutine()
         {
-            songName = FileManager.GetPath("/Songs/Test/" + "Test");
+            songName = FileManager.GetPath("Songs/Test/" + "Test");
 
             songBackgroundRenderer.sprite = FileManager.GetSprite(songName+".png");
 
