@@ -4,6 +4,7 @@ using Saving;
 using System;
 using UnityEngine.UIElements;
 using Recording.Note;
+using Unity.VisualScripting;
 
 namespace Recording
 {
@@ -11,6 +12,9 @@ namespace Recording
 
     public class NoteRenderer : MonoBehaviour
     {
+        [SerializeField] 
+        private AudioSource audioSource;
+
         [SerializeField]
         private GameObject[] notePrefabs = new GameObject[3];
 
@@ -19,15 +23,29 @@ namespace Recording
         private List<Track> tracksList;
         private float songLength;
 
-        // function called externally by Event
-        public void CreateEmptyNotes(float songLength)
-        {
-            this.songLength = songLength;
 
+        private void Start()
+        {
+            CreateEmptyNotes();
+        }
+
+        private void CreateEmptyNotes()
+        {
             tracksList = new List<Track>(5);
 
             for (int i = 0; i < 5; i++)
                 tracksList.Add(new Track(128)); // using some initial value as size of list
+        }
+
+        // function called externally by Event
+        public void SetSongLength(float songLength)
+        {
+            this.songLength = songLength;
+        }
+
+        public float[] GetTrackPositions()
+        {
+            return tracksPositions;
         }
 
         public bool TryAddNote(Vector3 notePos, NoteType noteType)

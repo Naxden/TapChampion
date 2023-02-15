@@ -16,7 +16,7 @@ namespace Recording.InputManager
         [SerializeField]
         private NoteRenderer noteRenderer;
 
-        private KeyCode[] keys = {KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L};
+        private KeyCode[] keys = new KeyCode[6];
         private float[] pushTimers = new float[5];
         private float[] addNotePositions = new float[5];
         private const float FPOSTION = -25f;
@@ -30,7 +30,19 @@ namespace Recording.InputManager
         private Vector3 startMousePos = Vector3.zero;
         [SerializeField]
         private Transform selectionBox;
-        private bool isSelecting = false;    
+        private bool isSelecting = false;
+
+
+        // function called externally by Event
+        public void LoadKeyBinds()
+        {
+            UserSettings userSettings = recorder.userSettings;
+
+            for (int i = 0; i < 6; i++)
+            {
+                keys[i] = (KeyCode)userSettings.keyBinds[i];
+            }
+        }
 
         // function called externally by Event
         public void EnableInput()
@@ -208,7 +220,7 @@ namespace Recording.InputManager
 
         private void CheckSpaceInput()
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(keys[5]))
             {
                 if (recorder.songIsPlaying)
                     recorder.PauseSong();

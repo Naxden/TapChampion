@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.Audio;
 using UnityEngine.Events;
 using Saving;
+using System.Collections.Generic;
 
 namespace Recording
 {
@@ -13,10 +14,16 @@ namespace Recording
 
     public class Recorder : MonoBehaviour
     {
+#region References
+        [SerializeField, Header("External References")]
+        private NoteRenderer noteRenderer;
+#endregion
+
 #region Private Variables 
+
         private string songPath, imagePath;
 
-        [SerializeField]
+        [SerializeField, Header("Local References")]
         private AudioSource audioSource;
 
         [SerializeField]
@@ -29,15 +36,19 @@ namespace Recording
         public bool songIsPlaying { get; private set; } = false;
         private bool songExists = false;
 
+        [SerializeField] 
+        private UnityEvent OnSettingsLoad;
+
         [SerializeField]
         private MyFloatEvent OnSongLoad;
         
         [SerializeField]
         private UnityEvent OnSongSelect;
 
-
         [SerializeField]
         private NoteFile songNoteFile = new NoteFile();
+
+        public UserSettings userSettings { get; private set; }
 #endregion
 #region Control button
         [SerializeField, Header("Control buttons")]
@@ -71,9 +82,16 @@ namespace Recording
 
         [SerializeField]
         private TMP_InputField songYearInput;
-#endregion
+        #endregion
 
-        
+
+        private void Start()
+        {
+            userSettings = FileManager.GetUserSettings();
+
+            OnSettingsLoad.Invoke();
+        }
+
         private void Update()
         {
             if (songLoaded && songIsPlaying)
@@ -189,6 +207,29 @@ namespace Recording
             int seconds = (int)time;
 
             return string.Format("{0}:{1:D2}", seconds / 60, seconds % 60);
+        }
+
+        // function called by OnSongLoad Event
+        public void RenderLoadedNotes()
+        {
+            float[] trackPositions = noteRenderer.GetTrackPositions();
+            List<NoteObject> notes;
+
+            if (userSettings.difficulty == (int)Difficulty.EASY)
+                notes = songNoteFile.easy;    
+            else if (userSettings.difficulty == (int)Difficulty.MEDIUM)
+                notes = songNoteFile.medium;
+            else
+                notes = songNoteFile.hard;
+
+            foreach (NoteObject note in notes)
+            {
+                Vector3 notePosition = new Vector3(note.spawnTime * 7.5f - 5f,
+                                                    trackPositions[note.buttonIndex],
+                                                    0f);
+
+                noteRenderer.TryAddNote(notePosition, (NoteType)note.noteType);
+            }
         }
 
         public void ImportImage()
