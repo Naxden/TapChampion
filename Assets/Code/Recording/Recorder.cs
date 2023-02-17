@@ -6,6 +6,8 @@ using UnityEngine.Audio;
 using UnityEngine.Events;
 using Saving;
 using System.Collections.Generic;
+using UnityEditor.Rendering;
+using System;
 
 namespace Recording
 {
@@ -18,7 +20,6 @@ namespace Recording
         [SerializeField, Header("External References")]
         private NoteRenderer noteRenderer;
 #endregion
-
 #region Private Variables 
 
         private string songPath, imagePath;
@@ -156,6 +157,7 @@ namespace Recording
 
         private void LoadSongCancel()
         {
+            songPath = null;
             songLoaded = false;
             songIsPlaying = false;
             playButton.interactable = false;
@@ -232,6 +234,34 @@ namespace Recording
             }
         }
 
+        // function called by ButtonClick
+        public void SaveSong()
+        {
+            if (songNoteFile == null)
+            {
+                Debug.LogWarning("ExportSong: noteFile is empty");
+                return;
+            }
+
+            songNoteFile.title = songTitleInput.text;
+            songNoteFile.author = songAuthorInput.text;
+            songNoteFile.year = Convert.ToInt32(songYearInput.text);
+
+            List<NoteObject> noteMap = noteRenderer.GetSortedNoteMap();
+
+            if (userSettings.difficulty == (int)Difficulty.EASY)
+                songNoteFile.easy = noteMap;
+            else if (userSettings.difficulty == (int)Difficulty.MEDIUM)
+                songNoteFile.medium = noteMap;
+            else
+                songNoteFile.hard = noteMap;
+
+            FileManager.RecordSong(songNoteFile.title, 
+                                   songNoteFile, 
+                                   imagePath,
+                                   songExists ? null : songPath);
+        }
+
         public void ImportImage()
         {
             FileManager.ShowLoadDialog(LoadImageSucces, LoadImageCancel, 
@@ -241,6 +271,7 @@ namespace Recording
         private void LoadImageCancel()
         {
             spriteRenderer.sprite = null;
+            imagePath = null;
         }
 
         private void LoadImageSucces(string[] paths)
@@ -289,11 +320,6 @@ namespace Recording
             currentTime.text = GetFormattedTime(timeElapsed);
         }
 
-        public void SaveSong()
-        {
-            songNoteFile.easy.Sort((p, q) => p.spawnTime.CompareTo(q.spawnTime));
-            //songNoteFile.easy.Insert()
-        }
     }
 }
 

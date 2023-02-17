@@ -5,6 +5,7 @@ using System;
 using UnityEngine.Networking;
 using System.Collections;
 using SimpleFileBrowser;
+using System.Net.Mime;
 
 namespace Saving
 {
@@ -60,31 +61,31 @@ namespace Saving
         {
             byte[] buffer = ReadBinaryFile(path);
 
-            if (buffer != null)
+            if (buffer == null)
             {
-                Texture2D texture2D = new Texture2D(2, 2);
-                texture2D.LoadImage(buffer);
-
-                Sprite sprite = Sprite.Create(texture2D,
-                                              new Rect(0.0f, 0.0f, texture2D.width, texture2D.height),
-                                              new Vector2(0.5f, 0.5f), 100.0f);
-
-                return sprite;
+                Debug.LogWarning($"GetSprite: Couldn't load sprite at {path}");
+                return null;
             }
+            
+            Texture2D texture2D = new Texture2D(2, 2);
+            texture2D.LoadImage(buffer);
 
-            Debug.LogWarning($"GetSprite: Couldn't load sprite at {path}");
-            return null;
+            Sprite sprite = Sprite.Create(texture2D,
+                                            new Rect(0.0f, 0.0f, texture2D.width, texture2D.height),
+                                            new Vector2(0.5f, 0.5f), 100.0f);
+
+            return sprite;
         }
 
         public static NoteFile GetNoteFile(string path)
         {
-            if (File.Exists(path))
+            if (!File.Exists(path))
             {
-                return StringToNoteFile(ReadFile(path));
+                Debug.LogWarning($"GetNoteFile: Couldn't load NoteFile at {path}");
+                return null;
             }
 
-            Debug.LogWarning($"GetSprite: Couldn't load sprite at {path}");
-            return null;
+            return StringToNoteFile(ReadFile(path));
         }
 
         public static string GetPath(string fileName)
@@ -94,25 +95,25 @@ namespace Saving
 
         private static string ReadFile(string path)
         {
-            if (File.Exists(path))
+            if (!File.Exists(path))
             {
-                using StreamReader sr = new StreamReader(path, System.Text.Encoding.UTF8);
-                return sr.ReadToEnd();
+                Debug.LogWarning($"ReadFile: Failed to read file at {path}");
+                return null;
             }
 
-            Debug.LogWarning($"ReadFile: Failed to read file at {path}");
-            return null;
+            using StreamReader sr = new StreamReader(path, System.Text.Encoding.UTF8);
+            return sr.ReadToEnd();
         }
 
         private static byte[] ReadBinaryFile(string path)
         {
-            if (File.Exists(path))
+            if (!File.Exists(path))
             {
-                return File.ReadAllBytes(path);
+                Debug.LogWarning($"ReadBinaryFile: Couldn't find file at {path}");
+                return null;
             }
 
-            Debug.LogWarning($"ReadBinaryFile: Couldn't find file at {path}");
-            return null;
+            return File.ReadAllBytes(path);
         }
 
         public static string GetPartOfString(string content, string beginFlag, string endFlag)
@@ -120,11 +121,14 @@ namespace Saving
             int beginIndex = content.LastIndexOf(beginFlag) + beginFlag.Length;
             int endIndex = content.IndexOf(endFlag);
 
-            if (beginIndex < endIndex)
-                return content.Substring(beginIndex, endIndex - beginIndex);
+            if (beginIndex >= endIndex)
+            {
+                Debug.LogWarning($"GetPartOfString: Couldn't find that flags " +
+                                 $"{beginFlag} : {endFlag} in passed content");
+                return null;
+            }
 
-            Debug.LogWarning($"GetPartOfString: Couldn't find that flags {beginFlag} : {endFlag} in passed content");
-            return null;
+            return content.Substring(beginIndex, endIndex - beginIndex);
         }
 
         public static bool DoesSongExist(string songName)
@@ -197,15 +201,16 @@ namespace Saving
             }
 
             string content = ReadFile(filePath);
-            NoteFile noteFile = StringToNoteFile(content);
+            NoteFile noteFile = StringToNoteFile(
+                    GetPartOfString(content, NOTE_MAP_BEGIN, NOTE_MAP_END));
             string title = noteFile.title;
             string directoryPath = SetSongDirectory(title);
 
             WriteNoteFile($"{directoryPath}/{title}.note", noteFile);
 
-            WriteSpriteFile($"{directoryPath}/{title}.png", content);
+            WriteSpriteFile($"{directoryPath}/{title}.png", content, true);
 
-            WriteMusicFile($"{directoryPath}/{title}.mp3", content);
+            WriteMusicFile($"{directoryPath}/{title}.mp3", content, true);
         }
 
         public static void ExportTapchFile()
@@ -213,9 +218,31 @@ namespace Saving
 
         }
 
-        public static void RecordSong(string songPath, string imagePath, NoteFile noteFile)
+        public static void RecordSong(string songTitle, NoteFile noteFile, string imagePath, string musicPath)
         {
+            string songDirectory = SetSongDirectory(songTitle);
 
+            if (imagePath != null)
+            {
+                byte[] bytes = ReadBinaryFile(imagePath);
+
+                WriteBinaryFile($"{songDirectory}/{songTitle}.png", bytes);
+            }
+
+            if (musicPath != null)
+            {
+                byte[] bytes = ReadBinaryFile(musicPath);
+
+                WriteBinaryFile($"{songDirectory}/{songTitle}.mp3", bytes);
+            }
+
+            if (noteFile == null)
+            {
+                Debug.LogWarning("RecordSong: noteFile was empty");
+                return;
+            }
+
+            WriteNoteFile($"{songDirectory}/{songTitle}.note", noteFile);
         }
 
         public static UserSettings GetUserSettings()
@@ -241,9 +268,7 @@ namespace Saving
 
         public static void WriteUserSettings(UserSettings userSettings)
         {
-            string content;
-
-            content = JsonUtility.ToJson(userSettings, true);
+            string content = JsonUtility.ToJson(userSettings, true);
             
             if (content == null)
             {
@@ -278,18 +303,20 @@ namespace Saving
             return JsonUtility.ToJson(noteFile, true);
         }
 
-        private static void WriteSpriteFile(string path, string content)
+        private static void WriteSpriteFile(string path, string content, bool importing)
         {
-            byte[] buffer = Convert.FromBase64String(
-                GetPartOfString(content, SPRITE_BEGIN, SPRITE_END));
+            byte[] buffer = Convert.FromBase64String( importing ?
+                GetPartOfString(content, SPRITE_BEGIN, SPRITE_END) :
+                content);
 
             WriteBinaryFile(path, buffer);
         }
 
-        public static void WriteMusicFile(string path, string content)
+        public static void WriteMusicFile(string path, string content, bool importing)
         {
-            byte[] buffer = Convert.FromBase64String(
-                GetPartOfString(content, MUSIC_BEGIN, MUSIC_END));
+            byte[] buffer = Convert.FromBase64String( importing ?
+                GetPartOfString(content, MUSIC_BEGIN, MUSIC_END) :
+                content);
 
             WriteBinaryFile(path, buffer);
         }

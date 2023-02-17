@@ -5,6 +5,7 @@ using System;
 using UnityEngine.UIElements;
 using Recording.Note;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 
 namespace Recording
 {
@@ -180,6 +181,33 @@ namespace Recording
                 Debug.LogWarning($"Failed removing {noteToMove.name} from track {initTrack}");
 
             tracksList[targetTrack].Add(noteToMove.gameObject);
+        }
+
+        private void SortTrack(int track)
+        {
+            tracksList[track].Sort((p, q) => 
+                            p.transform.position.x.CompareTo(q.transform.position.x));
+        }
+
+        public List<NoteObject> GetSortedNoteMap()
+        {
+            List<NoteObject> noteMap = new List<NoteObject>();
+
+            for (int track = 0; track < 5; track++) 
+            {
+                SortTrack(track);
+
+                foreach (GameObject noteObj in tracksList[track])
+                {
+                    float spawnTime = (noteObj.transform.position.x + 5f) / 7.5f;
+                    int noteType = (int)noteObj.transform.GetComponent<Selectable>().GetNoteType();
+                    noteMap.Add(new NoteObject(spawnTime, track, noteType));
+                }
+            }
+
+            noteMap.Sort((p, q) => p.spawnTime.CompareTo(q.spawnTime));
+
+            return noteMap;
         }
     }
 }
