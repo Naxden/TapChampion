@@ -1,3 +1,4 @@
+using Saving;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -9,11 +10,15 @@ namespace Recording.Note
     public class Selectable : MonoBehaviour
     {
         public Color initialColor;
+
+        [SerializeField]
+        private NoteType noteType;
+
         private SpriteRenderer mySpriteRenderer;
         private Vector3 initialPosition;
         private Rigidbody2D myRigidbody2D;
 
-        private bool isSelected = false;
+        public bool isSelected { get; private set; } = false;
         private bool isColliding = false;
         private bool longNoteError = false;
 
@@ -22,7 +27,6 @@ namespace Recording.Note
             mySpriteRenderer = GetComponent<SpriteRenderer>();
             initialColor = mySpriteRenderer.color;
             initialPosition = transform.position;
-
         }
 
         public void Select()
@@ -103,6 +107,11 @@ namespace Recording.Note
             isColliding = false;
             longNoteError = false;
             Destroy(myRigidbody2D);
+        }
+
+        public NoteType GetNoteType()
+        {
+            return noteType;
         }
     }
 }

@@ -85,6 +85,7 @@ namespace Recording
                 firstSnap = false;
                 return;
             }
+
             Vector3 newPosition = transform.position;
 
             if (Mathf.Abs(destination.x - transform.position.x) >= 0.75f)
@@ -99,7 +100,9 @@ namespace Recording
 
             if (childMinYPos == -3.75f && newPosition.y < transform.position.y ||
                 childMaxYPos ==  1.25f && newPosition.y > transform.position.y)
-                    newPosition.y = transform.position.y;
+            {
+                newPosition.y = transform.position.y;
+            }
 
             transform.position = newPosition;
             UpdateLongNotes();
@@ -110,8 +113,10 @@ namespace Recording
             float min = 1.25f;
 
             foreach (Transform child in transform)
+            {
                 if (child.position.y < min)
                         min = child.position.y;
+            }
 
             return min;
         }
@@ -121,8 +126,10 @@ namespace Recording
             float max = -3.75f;
 
             foreach (Transform child in transform)
+            {
                 if (child.position.y > max)
                     max = child.position.y;
+            }
 
             return max;
         }
@@ -172,6 +179,24 @@ namespace Recording
 
                 child.GetComponent<Selectable>().Deselect();
                 child.parent = noteRenderer.transform;
+            }
+
+            longNotes.Clear();
+
+            transform.position = Vector3.zero;
+            firstSnap = true;
+        }
+
+        public void Delete()
+        {
+            foreach (var longNote in longNotes)
+            {
+                longNote.DestroyOtherHalf();
+            }
+
+            foreach (Transform child in transform)
+            {
+                Destroy(child.gameObject);
             }
 
             longNotes.Clear();

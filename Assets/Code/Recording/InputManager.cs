@@ -62,9 +62,11 @@ namespace Recording.InputManager
             {
                 CheckMouseInput();
 
-                CheckButtonsInput();
+                CheckPlaceInput();
 
-                CheckSpaceInput();
+                CheckDeleteInput();
+
+                CheckPauseInput();
 
                 if (Input.GetKeyDown(KeyCode.Escape)) { Debug.Break(); }
             }
@@ -149,7 +151,7 @@ namespace Recording.InputManager
             selectionBox.position = new Vector3(-7f, 0f, 10f);
         }
 
-        private void CheckButtonsInput()
+        private void CheckPlaceInput()
         {
             if (!recorder.songIsPlaying)
                 return;
@@ -218,7 +220,15 @@ namespace Recording.InputManager
 
         }
 
-        private void CheckSpaceInput()
+        private void CheckDeleteInput()
+        {
+            if (Input.GetKeyDown(KeyCode.Delete))
+            {
+                notesHandler.Delete();
+            }
+        }
+
+        private void CheckPauseInput()
         {
             if (Input.GetKeyDown(keys[5]))
             {

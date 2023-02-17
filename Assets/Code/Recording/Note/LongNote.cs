@@ -51,6 +51,14 @@ namespace Recording.Note
             otherHalf.isBeginNote = false;
         }
 
+        public void DestroyOtherHalf()
+        {
+            if (!otherHalf.mySelectable.isSelected) 
+            {
+                Destroy(otherHalf.gameObject);
+            }
+        }
+
         public void MoveLongNote()
         {
             float distance = Mathf.Abs(otherHalf.transform.position.x - transform.position.x);
