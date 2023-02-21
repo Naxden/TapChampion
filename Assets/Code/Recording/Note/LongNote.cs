@@ -51,12 +51,9 @@ namespace Recording.Note
             otherHalf.isBeginNote = false;
         }
 
-        public void DestroyOtherHalf()
+        public GameObject GetOtherHalf()
         {
-            if (!otherHalf.mySelectable.isSelected) 
-            {
-                Destroy(otherHalf.gameObject);
-            }
+            return otherHalf.transform.gameObject;
         }
 
         public void MoveLongNote()

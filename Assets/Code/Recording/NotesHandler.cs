@@ -191,15 +191,18 @@ namespace Recording
         {
             foreach (var longNote in longNotes)
             {
-                longNote.DestroyOtherHalf();
-            }
+                GameObject otherHalf = longNote.GetOtherHalf();
 
-            foreach (Transform child in transform)
-            {
-                Destroy(child.gameObject);
+                if (!IsChild(otherHalf))
+                    otherHalf.transform.parent = transform;
             }
 
             longNotes.Clear();
+
+            foreach (Transform child in transform)
+            {
+                noteRenderer.DeleteNote(child.transform.position);
+            }
 
             transform.position = Vector3.zero;
             firstSnap = true;
