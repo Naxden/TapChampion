@@ -1,11 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Saving;
-using System;
-using UnityEngine.UIElements;
 using Recording.Note;
-using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
 
 namespace Recording
 {
@@ -13,9 +9,6 @@ namespace Recording
 
     public class NoteRenderer : MonoBehaviour
     {
-        [SerializeField] 
-        private AudioSource audioSource;
-
         [SerializeField]
         private GameObject[] notePrefabs = new GameObject[3];
 
@@ -141,9 +134,7 @@ namespace Recording
         {
             if (tracksList == null)
                 return;
-
-            Debug.Log("Clearing Tracks");
-
+             
             for (int i = 0; i < tracksList.Count; i++) 
             {
                 foreach (var note in tracksList[i])
