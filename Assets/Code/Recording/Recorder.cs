@@ -6,7 +6,6 @@ using UnityEngine.Audio;
 using UnityEngine.Events;
 using Saving;
 using System.Collections.Generic;
-using UnityEditor.Rendering;
 using System;
 
 namespace Recording
@@ -85,12 +84,9 @@ namespace Recording
         private TMP_InputField songYearInput;
         #endregion
 
-
         private void Start()
         {
-            userSettings = FileManager.GetUserSettings();
-
-            OnSettingsLoad.Invoke();
+            UpdateKeyBinds();
         }
 
         private void Update()
@@ -180,6 +176,8 @@ namespace Recording
 
             if (songExists)
                 LoadExistingSong(songNoteFile.title);
+            else
+                ResetSongData();
 
             songLength.text = "/ " + GetFormattedTime(audioSource.clip.length);
             slider.maxValue = audioSource.clip.length;
@@ -202,6 +200,15 @@ namespace Recording
             songTitleInput.text = songNoteFile.title;
             songAuthorInput.text = songNoteFile.author;
             songYearInput.text = songNoteFile.year.ToString();
+        }
+
+        private void ResetSongData()
+        {
+            songNoteFile = new NoteFile();
+
+            songTitleInput.text = "";
+            songAuthorInput.text = "";
+            songYearInput.text =  "";
         }
 
         private string GetFormattedTime(float time)
@@ -234,12 +241,37 @@ namespace Recording
             }
         }
 
+        public void UpdateKeyBinds()
+        {
+            userSettings = FileManager.GetUserSettings();
+
+            OnSettingsLoad.Invoke();
+        }
+
+        // function called by OnDifficultyChanged Event
+        public void LoadDifferentDifficulty()
+        {
+            if (!songLoaded)
+                return;
+
+            userSettings = FileManager.GetUserSettings();
+
+            noteRenderer.ClearTracks();
+
+            RenderLoadedNotes();
+        }
+
         // function called by ButtonClick
         public void SaveSong()
         {
+            if (!songLoaded)
+            {
+                Debug.LogWarning("SaveSong: no song loaded");
+                return;
+            }
             if (songNoteFile == null)
             {
-                Debug.LogWarning("ExportSong: noteFile is empty");
+                Debug.LogWarning("SaveSong: noteFile is empty");
                 return;
             }
 
@@ -291,6 +323,9 @@ namespace Recording
 
         public void PauseSong()
         {
+            if (!songLoaded)
+                return;
+
             audioSource.Pause();
             songIsPlaying = false;
             playButton.gameObject.SetActive(true);

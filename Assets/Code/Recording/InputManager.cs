@@ -1,9 +1,8 @@
 using UnityEngine;
 using Saving;
-using System;
-using UnityEngine.UIElements;
+using System.Collections.Generic;
 
-namespace Recording.InputManager
+namespace Recording
 {
     public class InputManager : MonoBehaviour
     {
@@ -16,7 +15,8 @@ namespace Recording.InputManager
         [SerializeField]
         private NoteRenderer noteRenderer;
 
-        private KeyCode[] keys = new KeyCode[6];
+        [SerializeField]
+        private KeyCode[] buttons = new KeyCode[7];
         private float[] pushTimers = new float[5];
         private float[] addNotePositions = new float[5];
         private const float FPOSTION = -25f;
@@ -36,11 +36,11 @@ namespace Recording.InputManager
         // function called externally by Event
         public void LoadKeyBinds()
         {
-            UserSettings userSettings = recorder.userSettings;
+            List<int> userKeys = recorder.userSettings.keys;
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < userKeys.Count; i++)
             {
-                keys[i] = (KeyCode)userSettings.keyBinds[i];
+                buttons[i] = (KeyCode)userKeys[i];
             }
         }
 
@@ -67,8 +67,6 @@ namespace Recording.InputManager
                 CheckDeleteInput();
 
                 CheckPauseInput();
-
-                if (Input.GetKeyDown(KeyCode.Escape)) { Debug.Break(); }
             }
         }
 
@@ -165,13 +163,13 @@ namespace Recording.InputManager
                     PlaceNoteByKey(i, true);
                 }
 
-                if (Input.GetKeyDown(keys[i]))
+                if (Input.GetKeyDown(buttons[i]))
                     addNotePositions[i] = xPosition - 5f;
 
-                if (Input.GetKey(keys[i]))
+                if (Input.GetKey(buttons[i]))
                     pushTimers[i] += Time.deltaTime;
 
-                if (Input.GetKeyUp(keys[i]))
+                if (Input.GetKeyUp(buttons[i]))
                 {
                     if (longNotesBeginPosition[i] != FPOSTION)
                         addNotePositions[i] = xPosition - 5f;
@@ -222,7 +220,7 @@ namespace Recording.InputManager
 
         private void CheckDeleteInput()
         {
-            if (Input.GetKeyDown(KeyCode.Delete))
+            if (Input.GetKeyDown(buttons[(int)GameKeys.REC_DELETE]))
             {
                 notesHandler.Delete();
             }
@@ -230,7 +228,7 @@ namespace Recording.InputManager
 
         private void CheckPauseInput()
         {
-            if (Input.GetKeyDown(keys[5]))
+            if (Input.GetKeyDown(buttons[(int)GameKeys.REC_PAUSE]))
             {
                 if (recorder.songIsPlaying)
                     recorder.PauseSong();
