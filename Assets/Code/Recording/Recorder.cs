@@ -221,6 +221,9 @@ namespace Recording
         // function called by OnSongLoad Event
         public void RenderLoadedNotes()
         {
+            if (!songExists)
+                return;
+
             float[] trackPositions = noteRenderer.GetTrackPositions();
             List<NoteObject> notes;
 
@@ -251,10 +254,10 @@ namespace Recording
         // function called by OnDifficultyChanged Event
         public void LoadDifferentDifficulty()
         {
+            userSettings = FileManager.GetUserSettings();
+
             if (!songLoaded)
                 return;
-
-            userSettings = FileManager.GetUserSettings();
 
             noteRenderer.ClearTracks();
 
