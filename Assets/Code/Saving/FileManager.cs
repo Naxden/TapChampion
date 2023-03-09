@@ -93,6 +93,12 @@ namespace Saving
             return Directory.GetCurrentDirectory() + '/' + fileName;
         }
 
+        public static string[] GetAllSongs()
+        {
+            string songDirPath = GetPath("Songs");
+            return Directory.GetDirectories(songDirPath);
+        }
+
         private static string ReadFile(string path)
         {
             if (!File.Exists(path))
@@ -119,10 +125,11 @@ namespace Saving
         public static string GetPartOfString(string content, string beginFlag, string endFlag)
         {
             int beginIndex = content.LastIndexOf(beginFlag) + beginFlag.Length;
-            int endIndex = content.IndexOf(endFlag);
+            int endIndex = endFlag == "\0" ? content.Length : content.IndexOf(endFlag);
 
             if (beginIndex >= endIndex)
             {
+                Debug.LogWarning($"{beginIndex} {endIndex}");
                 Debug.LogWarning($"GetPartOfString: Couldn't find that flags " +
                                  $"{beginFlag} : {endFlag} in passed content");
                 return null;
@@ -134,7 +141,7 @@ namespace Saving
         public static bool DoesSongExist(string songName)
         {
             return Directory.Exists(GetPath("Songs/") + songName);
-        } 
+        }
 
         public static void FileDialogInitialize()
         {
