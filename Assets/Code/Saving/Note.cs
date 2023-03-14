@@ -9,6 +9,7 @@ namespace Saving
         public string author = "";
         public int year;
 
+        public List<float> highScores;
         public List<NoteObject> easy;
         public List<NoteObject> medium;
         public List<NoteObject> hard;
