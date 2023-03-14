@@ -1,11 +1,9 @@
 using UnityEngine;
 using System.IO;
-using UnityEditor;
 using System;
 using UnityEngine.Networking;
 using System.Collections;
 using SimpleFileBrowser;
-using System.Net.Mime;
 
 namespace Saving
 {
@@ -26,7 +24,7 @@ namespace Saving
             WriteFile(path, content);
         }
 
-        private static void WriteFile(string path, string content)
+        private static void WriteFile(string path, in string content)
         {
             FileStream fileStream = new FileStream(path, FileMode.Create);
 
@@ -34,7 +32,7 @@ namespace Saving
             writer.WriteLine(content);
         }
 
-        private static void WriteBinaryFile(string path, byte[] content)
+        private static void WriteBinaryFile(string path, in byte[] content)
         {
             FileStream fileStream = new FileStream(path, FileMode.Create);
 
@@ -193,41 +191,66 @@ namespace Saving
             }
         }
 
-        public static void ImportTapchFile()
+        public static bool ImportTapchFile(string filePath)
         {
-            string filePath = "";
-            FileManager.ShowLoadDialog((paths) => filePath = paths[0], 
-                                        () => filePath = "",
-                                        "Load TapCh file",
-                                        FileExtension.TAPCH);
-                                        
-            if (filePath.Length == 0)
-            {
-                Debug.Log("ImportTapchFile: File import fail");
-                return;
-            }
-
             string content = ReadFile(filePath);
-            NoteFile noteFile = StringToNoteFile(
-                    GetPartOfString(content, NOTE_MAP_BEGIN, NOTE_MAP_END));
+
+            NoteFile noteFile = StringToNoteFile(GetPartOfString(content, NOTE_MAP_BEGIN, NOTE_MAP_END));
             string title = noteFile.title;
-            string directoryPath = SetSongDirectory(title);
+
+            if (DoesSongExist(title))
+            {
+                Debug.LogWarning($"ImportTapchFile: Song with name {title} already exists");
+                return false;
+            }
+            string directoryPath = CreateSongDirectory(title);
 
             WriteNoteFile($"{directoryPath}/{title}.note", noteFile);
 
+            WriteMusicFile($"{directoryPath}/{title}.mp3", content, true);
+
             WriteSpriteFile($"{directoryPath}/{title}.png", content, true);
 
-            WriteMusicFile($"{directoryPath}/{title}.mp3", content, true);
+            return true;
         }
 
-        public static void ExportTapchFile()
+        public static void ExportTapchFile(string songTitle)
         {
+            string songPath = GetSongDirectory(songTitle);
 
+            NoteFile noteFile = GetNoteFile($"{songPath}/{songTitle}.note");
+
+            for (int i = 0; i < noteFile.highScores.Count; i++)
+                noteFile.highScores[i] = 0f;
+            
+            string content = NOTE_MAP_BEGIN;
+            content += NoteFileToString(noteFile);
+            content += NOTE_MAP_END;
+
+            string songMusicFile = Convert.ToBase64String(ReadBinaryFile($"{songPath}/{songTitle}.mp3"));
+            content += MUSIC_BEGIN;
+            content += songMusicFile;
+            content += MUSIC_END;
+
+            string songImageFile = Convert.ToBase64String(ReadBinaryFile($"{songPath}/{songTitle}.png"));
+            content += SPRITE_BEGIN;
+            content += songImageFile;
+            content += SPRITE_END;
+
+            string destinationPath = GetPath($"Downloads/{songTitle}.tapch");
+            WriteFile(destinationPath, content);
+        }
+
+        public static void RecordNewSong(string songTitle, NoteFile noteFile, string imagePath, string musicPath)
+        {
+            CreateSongDirectory(songTitle);
+
+            RecordSong(songTitle, noteFile, imagePath, musicPath);
         }
 
         public static void RecordSong(string songTitle, NoteFile noteFile, string imagePath, string musicPath)
         {
-            string songDirectory = SetSongDirectory(songTitle);
+            string songDirectory = GetSongDirectory(songTitle);
 
             if (imagePath != null)
             {
@@ -328,14 +351,35 @@ namespace Saving
             WriteBinaryFile(path, buffer);
         }
 
-        private static string SetSongDirectory(string songTitle)
+        private static string CreateSongDirectory(string songTitle)
+        {
+            string targetPath = GetPath("/Songs/") + songTitle;
+
+            if (DoesSongExist(songTitle))
+            {
+                Debug.LogWarning($"CreateSongDirectory: Song with name {songTitle} already exists");
+                return null;
+            }
+            
+            Directory.CreateDirectory(targetPath);
+            return targetPath;
+        }
+
+        private static string GetSongDirectory(string songTitle)
+        {
+            string targetPath = GetPath("/Songs/") + songTitle;
+
+            return targetPath;
+        }
+
+        public static void DeleteSongDirectory(string songTitle)
         {
             string targetPath = GetPath("/Songs/") + songTitle;
 
             if (!Directory.Exists(targetPath))
-                Directory.CreateDirectory(targetPath);
-
-            return targetPath;
+                return;
+            
+            Directory.Delete(targetPath, true);
         }
     }
 }

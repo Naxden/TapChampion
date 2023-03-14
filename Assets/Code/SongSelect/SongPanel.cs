@@ -1,3 +1,4 @@
+using Saving;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -46,11 +47,13 @@ namespace SongSelect
             author.text = song.noteFile.author;
             year.text = song.noteFile.year.ToString();
 
-            UpdateHighScore(0);
+            UpdateHighScore(songManager.GetDifficulty());
         }
 
-        public void UpdateHighScore(int score)
+        public void UpdateHighScore(int difficulty)
         {
+            Debug.Log($"{song.noteFile.title} diff changed");
+            float score = song.noteFile.highScores[difficulty];
             highScore.text = score.ToString();
         }
 
@@ -79,8 +82,13 @@ namespace SongSelect
             {
                 Deque();
                 selected = false;
-                songManager.PauseSongPreview();
             }
+        }
+
+        // Function called by ExportButton Click
+        public void TryExportSong()
+        {
+            songManager.TryExportSong(song.noteFile.title);
         }
 
     }

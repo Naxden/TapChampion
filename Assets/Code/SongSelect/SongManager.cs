@@ -1,3 +1,4 @@
+using Global;
 using Saving;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,33 +16,44 @@ namespace SongSelect
         [SerializeField]
         private GameObject songPrefab;
 
+        [SerializeField]
+        private FadeManger fadeManger;
+
         private Vector3 spawnPosition = new Vector3(0f, 200f, 0f);
         private List<Song> loadedSongs = new List<Song>();
         public static List<Song> songsToPlay = new List<Song>();
+
+        private Difficulty difficulty;
 
         private const float startVolume = 0.1f;
         float endVolume = 1.0f;
         [SerializeField]
         float songEffectDuration = 0.8f;
 
+        private string songToExport;
+        [SerializeField]
+        private GameObject exportPrompt;
+
         private void Start()
         {
             if (songsToPlay.Count > 0)
                 songsToPlay.Clear();
 
+            UpdateDifficulty();
+            StartCoroutine(LoadSongsRoutine());
+        }
+
+        private IEnumerator LoadSongsRoutine()
+        {
             string[] paths = FileManager.GetAllSongs();
 
             foreach (string path in paths)
             {
-                InstantiateSong(path);
+                yield return InstantiateSongRoutine(path);
             }
-        }
 
-        public void InstantiateSong(string songDirPath)
-        {
-            StartCoroutine(InstantiateSongRoutine(songDirPath));
+            yield return fadeManger.FadeRoutine(false);
         }
-
         private IEnumerator InstantiateSongRoutine(string songDirPath)
         {
             string songTitle = FileManager.GetPartOfString(songDirPath, "\\", "\0");
@@ -88,8 +100,6 @@ namespace SongSelect
 
         private IEnumerator SongBeginRoutine(AudioClip audioClip)
         {
-            Debug.Log("Starting Begin Routine");
-            
             float currentTime = 0f;
             float percentage;
 
@@ -107,22 +117,10 @@ namespace SongSelect
 
                 yield return null;
             }
-            Debug.Log("Ending Begin Routine");
-        }
-
-        public void PauseSongPreview()
-        {
-            return;
-            StopAllCoroutines();
-            
-            if (audioSource.isPlaying)
-                StartCoroutine(SongEndRoutine());
         }
 
         private IEnumerator SongEndRoutine()
         {
-            Debug.Log("Starting End Routine");
-
             float currentTime = 0f;
             float percentage;
             float songEffectDuration = this.songEffectDuration / 2;
@@ -138,8 +136,47 @@ namespace SongSelect
             }
 
             audioSource.Stop();
-            Debug.Log("Ending End Routine");
         }
+
+        public int GetDifficulty()
+        {
+            return (int)difficulty;
+        }
+
+        public void UpdateDifficulty()
+        {
+            difficulty = (Difficulty)FileManager.GetUserSettings().difficulty;
+
+            foreach (SongPanel songs in songsHolder.GetComponentsInChildren<SongPanel>())
+            {
+                Debug.Log(songs.name);
+                //songs.GetComponent<SongPanel>().UpdateHighScore((int)difficulty);
+            }
+        }
+
+        public void TryExportSong(string songTitle)
+        {
+            songToExport = songTitle;
+
+            exportPrompt.SetActive(true);
+        }
+
+        // Function called by ExportConfirmationPrompt Click
+        public void ResetExportSong()
+        {
+            songToExport = null;
+        }
+
+        // Function called by ExportConfirmationPrompt Click
+        public void ExportSong()
+        {
+            if (songToExport == null)
+                return;
+
+            FileManager.ExportTapchFile(songToExport);
+            Debug.Log($"I am exporting: {songToExport}");
+        }
+
     }
 
 }
