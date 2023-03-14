@@ -4,9 +4,10 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Audio;
 using UnityEngine.Events;
-using Saving;
 using System.Collections.Generic;
+using Saving;
 using System;
+using Global;
 
 namespace Recording
 {
@@ -18,6 +19,8 @@ namespace Recording
 #region References
         [SerializeField, Header("External References")]
         private NoteRenderer noteRenderer;
+        [SerializeField]
+        private FadeManger fadeManger;
 #endregion
 #region Private Variables 
 
@@ -87,6 +90,7 @@ namespace Recording
         private void Start()
         {
             UpdateKeyBinds();
+            StartCoroutine(fadeManger.FadeRoutine(false));
         }
 
         private void Update()
@@ -142,7 +146,7 @@ namespace Recording
                 audioMixer.SetFloat("MyPitch", 1f);
         }
 
-        public void ImportSong()
+        public void LoadSong()
         {
             if (songLoaded)
                 StopSong();
@@ -168,6 +172,8 @@ namespace Recording
 
         private IEnumerator LoadedSongRoutine(string path)
         {
+            yield return fadeManger.FadeRoutine(true);
+            
             yield return FileManager.GetAudioClipRoutine(path, audioSource);
             
             songPath = path;
@@ -188,18 +194,22 @@ namespace Recording
             playButton.interactable = true;
             
             OnSongLoad.Invoke(slider.maxValue);
+
+            yield return fadeManger.FadeRoutine(false);
         }
 
         private void LoadExistingSong(string songTitle)
         {
             string songDirPath = FileManager.GetPath("Songs/" + songTitle);
 
-            spriteRenderer.sprite = FileManager.GetSprite(songDirPath + $"/{songTitle}.png");
-            
+            imagePath = songDirPath + $"/{songTitle}.png";
+            spriteRenderer.sprite = FileManager.GetSprite(imagePath);
+
             songNoteFile = FileManager.GetNoteFile(songDirPath + $"/{songTitle}.note");
             songTitleInput.text = songNoteFile.title;
             songAuthorInput.text = songNoteFile.author;
             songYearInput.text = songNoteFile.year.ToString();
+
         }
 
         private void ResetSongData()
@@ -209,6 +219,8 @@ namespace Recording
             songTitleInput.text = "";
             songAuthorInput.text = "";
             songYearInput.text =  "";
+
+            songNoteFile.highScores = new List<float>{0f, 0f, 0f };
         }
 
         private string GetFormattedTime(float time)
@@ -278,10 +290,6 @@ namespace Recording
                 return;
             }
 
-            songNoteFile.title = songTitleInput.text;
-            songNoteFile.author = songAuthorInput.text;
-            songNoteFile.year = Convert.ToInt32(songYearInput.text);
-
             List<NoteObject> noteMap = noteRenderer.GetSortedNoteMap();
 
             if (userSettings.difficulty == (int)Difficulty.EASY)
@@ -291,10 +299,39 @@ namespace Recording
             else
                 songNoteFile.hard = noteMap;
 
-            FileManager.RecordSong(songNoteFile.title, 
-                                   songNoteFile, 
-                                   imagePath,
-                                   songExists ? null : songPath);
+            songNoteFile.year = Convert.ToInt32(songYearInput.text);
+            songNoteFile.author = songAuthorInput.text;
+            //songNoteFile.title = songTitleInput.text;
+            
+            if (songExists)
+            {
+                if (songNoteFile.title == songTitleInput.text)
+                {
+                    FileManager.RecordSong(songNoteFile.title,
+                                           songNoteFile,
+                                           null,
+                                           null);
+                }
+                else
+                {
+                    string oldTitle = songNoteFile.title;
+                    songNoteFile.title = songTitleInput.text;
+                    FileManager.RecordNewSong(songNoteFile.title,
+                                              songNoteFile,
+                                              imagePath,
+                                              songPath);
+
+                    FileManager.DeleteSongDirectory(oldTitle);
+                }
+            }
+            else
+            {
+                songNoteFile.title = songTitleInput.text;
+                FileManager.RecordNewSong(songNoteFile.title,
+                                          songNoteFile,
+                                          imagePath,
+                                          songPath);
+            }
         }
 
         public void ImportImage()
@@ -302,18 +339,20 @@ namespace Recording
             FileManager.ShowLoadDialog(LoadImageSucces, LoadImageCancel, 
                                       "Load Image", FileManager.FileExtension.IMAGE);
         }
-
-        private void LoadImageCancel()
-        {
-            spriteRenderer.sprite = null;
-            imagePath = null;
-        }
-
         private void LoadImageSucces(string[] paths)
         {
             spriteRenderer.sprite = FileManager.GetSprite(paths[0]);
             imagePath = paths[0];
         }
+
+        private void LoadImageCancel()
+        {
+            spriteRenderer.sprite = null;
+            
+            if (!songExists)
+                imagePath = null;
+        }
+
 
         public void PlaySong()
         {
