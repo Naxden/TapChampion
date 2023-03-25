@@ -2,18 +2,16 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Saving;
+using System.Runtime.InteropServices;
 
 namespace GameScene
 {
     public class NoteManager : MonoBehaviour
     {
         #region NoteInit
+
         [SerializeField]
-        GameObject noteShortPrefab;
-        [SerializeField]
-        GameObject noteLongBegPrefab;
-        [SerializeField]
-        GameObject noteLongEndPrefab;
+        GameObject[] notePrefabs;
 
         [SerializeField]
         Button[] buttons;
@@ -21,62 +19,64 @@ namespace GameScene
         [SerializeField]
         Vector3[] noteStartingPositions;
 
-        Queue<NoteMB> notesQueue = new Queue<NoteMB>(100);
+        Queue<NoteMB> notesPool = new Queue<NoteMB>(100);
         #endregion
 
         bool spawn = false;
         const float NOTE_TRAVEL_DISTANCE = 4.75f;
+        const float NOTE_DELAY_TO_ARRIVE = NOTE_TRAVEL_DISTANCE / 3.5f;
 
-        float songTimer = -3f;
+        float songTimer;
+        private bool songIsPlaying = false;
         int noteIndex = 0;
 
-        List<NoteObject> loadedNotes;
+        List<NoteObject> notesMap;
         float timeCalibration = 0f;
+        List<NoteMB> sendedNotes = new List<NoteMB>();
 
-        UIController uiController;
-
-        void Start()
+        void Awake()
         {
-            uiController = FindObjectOfType<UIController>();
             FillQueue();
         }
 
         public void Intialize(List<NoteObject> noteObjects, float timeCalibration)
         {
             this.timeCalibration = timeCalibration; 
-            loadedNotes = noteObjects;
+            notesMap = noteObjects;
             spawn = true;
+        }
+
+        public void SetTimer(float time)
+        {
+            songTimer = time;
         }
 
         private void SendNote()
         {
-            NoteMB note = notesQueue.Dequeue();
+            NoteMB note = notesPool.Dequeue();
 
-            NoteType noteType = (NoteType)loadedNotes[noteIndex].noteType;
+            NoteType noteType = (NoteType)notesMap[noteIndex].noteType;
             
-            note.Initialize(noteStartingPositions[loadedNotes[noteIndex].buttonIndex],
+            note.Initialize(noteStartingPositions[notesMap[noteIndex].buttonIndex],
                             noteType,
-                            buttons[loadedNotes[noteIndex].buttonIndex]);
-            
-            if (noteType == NoteType.Short)
-                note.UpdateVisuals(noteShortPrefab);
-            else if (noteType == NoteType.LongBegin)
-                note.UpdateVisuals(noteLongBegPrefab);
-            else
-                note.UpdateVisuals(noteLongEndPrefab);
+                            buttons[notesMap[noteIndex].buttonIndex]);
+
+            note.UpdateVisuals(notePrefabs[(int)noteType]);
 
             note.gameObject.SetActive(true);
+
+            sendedNotes.Add(note);
         }
 
         private void FillQueue()
         {
             for (int i = 0; i < 100; i++)
             {
-                NoteMB note = Instantiate(noteShortPrefab, transform.position, Quaternion.identity).GetComponent<NoteMB>();
+                NoteMB note = Instantiate(notePrefabs[0], transform.position, Quaternion.identity).GetComponent<NoteMB>();
                 note.gameObject.SetActive(false);
                 note.name = $"Note {i}";
                 note.transform.SetParent(transform, false);
-                notesQueue.Enqueue(note);
+                notesPool.Enqueue(note);
             }
         }
 
@@ -91,38 +91,52 @@ namespace GameScene
 
             note.gameObject.SetActive(false);
             note.transform.position = transform.position;
-            notesQueue.Enqueue(note);
+            notesPool.Enqueue(note);
+            sendedNotes.Remove(note);
         }
+
+        //int breakIndex = 0;
 
         void Update()
         {
+            //if (breakIndex < loadedNotes.Count && songTimer >= (loadedNotes[breakIndex].spawnTime))
+            //{
+            //    breakIndex++;
+            //    Debug.Break();
+            //}
             if (spawn)
             {
-                songTimer += Time.deltaTime;
-
-                if (noteIndex >= loadedNotes.Count)
+                if (noteIndex >= notesMap.Count)
                 {
                     Debug.LogWarning("Load notes, index out of bound");
                     spawn = false;
                 }
                 else
                 {
-                    while (noteIndex < loadedNotes.Count && 
-                           songTimer >= (loadedNotes[noteIndex].spawnTime + timeCalibration))
+                    while (noteIndex < notesMap.Count && 
+                           songTimer + NOTE_DELAY_TO_ARRIVE >= (notesMap[noteIndex].spawnTime + timeCalibration))
                     {
                         SendNote();
                         noteIndex++;
                     }
                 }
-                uiController.UpdateTime(songTimer);
             }
+            
+            if (songIsPlaying)
+                MoveNotes();
+        }
 
-            if (Input.GetKeyUp(KeyCode.Space))
-                spawn = false;
+        public void SongIsPlaying(bool isPlaing)
+        {
+            songIsPlaying = isPlaing;
+        }
 
-            if (Input.GetKeyUp(KeyCode.Backspace))
-                ClearAllNotes();
-
+        private void MoveNotes()
+        {
+            foreach (NoteMB note in sendedNotes)
+            {
+                note.Move();
+            }
         }
 
         void ClearAllNotes()

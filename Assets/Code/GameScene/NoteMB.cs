@@ -50,7 +50,7 @@ namespace GameScene
             mySR.color = otherSR.color;
         }
 
-        void Update()
+        public void Move()
         {
             transform.Translate(direction * speed * Time.deltaTime);
         }

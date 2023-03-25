@@ -31,6 +31,11 @@ namespace GameScene
 
         }
 
+        public void SetKey(KeyCode keyCode)
+        {
+            this.keyCode = keyCode;
+        }
+
         private void Update()
         {
             if (Input.GetKeyDown(keyCode))
