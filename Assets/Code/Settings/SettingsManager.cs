@@ -8,6 +8,7 @@ namespace Settings
     public class SettingsManager : MonoBehaviour
     {
         private bool isVisible = false;
+        private bool inputEnabled = false;
 
         [SerializeField]
         GameObject settingsPanel;
@@ -35,7 +36,7 @@ namespace Settings
 
         private void Update()
         {
-            if (isVisible)
+            if (inputEnabled && isVisible)
             {
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
@@ -72,12 +73,17 @@ namespace Settings
             }
         }
 
+        public void EnableInput(bool toEnable)
+        {
+            inputEnabled = toEnable;
+        }
+
         public void SaveSettings()
         {
             FileManager.WriteUserSettings(userSettings);
         }
 
-        public void EnableInput()
+        public void EnableMainSettings()
         {
             isVisible = true;
             settingsContent.SetActive(true);
@@ -114,7 +120,7 @@ namespace Settings
         }
 
         // function called by Events on SettingsButtons
-        public void DisableInput()
+        public void DisableMainSettings()
         {
             isVisible = false;
             settingsContent.SetActive(false);

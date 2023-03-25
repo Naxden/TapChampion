@@ -42,7 +42,7 @@ namespace Settings
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 gameObject.SetActive(false);
-                settingsManager.EnableInput();
+                settingsManager.EnableMainSettings();
             }
         }
 
