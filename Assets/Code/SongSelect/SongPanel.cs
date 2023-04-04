@@ -21,6 +21,8 @@ namespace SongSelect
         private TMP_Text year;
         [SerializeField]
         private TMP_Text highScore;
+        [SerializeField]
+        private TMP_Text accuracy;
         private SongManager songManager;
 
         private Song song;
@@ -47,14 +49,16 @@ namespace SongSelect
             author.text = song.noteFile.author;
             year.text = song.noteFile.year.ToString();
 
-            UpdateHighScore(songManager.GetDifficulty());
+            UpdateScores(songManager.GetDifficulty());
         }
 
-        public void UpdateHighScore(int difficulty)
+        public void UpdateScores(int difficulty)
         {
             Debug.Log($"{song.noteFile.title} diff changed");
-            float score = song.noteFile.highScores[difficulty];
+            int score = song.noteFile.highScores[difficulty];
+            float accuracyVal = song.noteFile.accuracies[difficulty];
             highScore.text = score.ToString();
+            accuracy.text = $"{accuracyVal:0.##} %";
         }
 
         private void Enque()
