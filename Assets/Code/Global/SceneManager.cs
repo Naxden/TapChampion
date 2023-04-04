@@ -1,5 +1,4 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Global
@@ -7,12 +6,17 @@ namespace Global
     public class SceneManager : MonoBehaviour
     {
         [SerializeField]
-        FadeManger fadeManager;
+        private FadeManger fadeManager;
 
         private void Start()
         {
             if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Menu")
                 StartCoroutine(fadeManager.FadeRoutine(false));
+        }
+
+        public string GetCurrentSceneName()
+        {
+            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         }
 
         public void LoadScene(string sceneName)
