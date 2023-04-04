@@ -23,17 +23,21 @@ namespace GameScene
 
         bool isWaitingForEndNote = false;
         
+        public void SetKey(KeyCode keyCode)
+        {
+            this.keyCode = keyCode;
+        }
+
+        public void ClearNotesQueue()
+        {
+            notesQueue.Clear();
+        }
+
         private void Awake()
         {
             buttonSprite = GetComponent<SpriteRenderer>();
 
             audioSource = GetComponent<AudioSource>();
-
-        }
-
-        public void SetKey(KeyCode keyCode)
-        {
-            this.keyCode = keyCode;
         }
 
         private void Update()
@@ -87,7 +91,7 @@ namespace GameScene
             {
                 isWaitingForEndNote = false;
                 player.NoteWasMissed();
-                noteManager.RetrieveNote(notesQueue.Dequeue(), 3f);
+                notesQueue.Dequeue();
             }
         }
 
@@ -96,27 +100,9 @@ namespace GameScene
             NoteMB note = notesQueue.Dequeue();
             float distance = Vector3.Distance(transform.position, note.transform.position);
 
-            if (note.GetNoteType() == NoteType.LongBegin)
-            {
-                player.NoteWasHit(HitInfo(distance));
-                isWaitingForEndNote = true;
-                noteManager.RetrieveNote(note);
-            }
-            else 
-            {
-                if (note.GetNoteType() == NoteType.Short)
-                {
-                    player.NoteWasHit(HitInfo(distance));
-                    isWaitingForEndNote = false;
-                    noteManager.RetrieveNote(note);
-                }
-                else if (note.GetNoteType() == NoteType.LongEnd && isWaitingForEndNote)
-                {
-                    player.NoteWasHit(HitInfo(distance));
-                    isWaitingForEndNote = false;
-                    noteManager.RetrieveNote(note);
-                }
-            }
+            player.NoteWasHit(HitInfo(distance));
+            noteManager.RetrieveNote(note);
+            isWaitingForEndNote = note.GetNoteType() == NoteType.LongBegin;
         }
         
         private string HitInfo(float distance)
