@@ -8,11 +8,11 @@ namespace GameScene
         [SerializeField]
         TextMeshProUGUI scoreTM, hitInfoTM, accuracyTM, multiplierTM, timerTM;
 
-        public void UpdateInfo(int score, string hitInfo, int accuracy, int multiplier)
+        public void UpdateInfo(int score, string hitInfo, float accuracy, int multiplier)
         {
             scoreTM.text = $"Score: {score}";
             hitInfoTM.text = hitInfo;
-            accuracyTM.text = $"Accuracy: {accuracy}%";
+            accuracyTM.text = $"Accuracy: {accuracy:0.00} %";
             multiplierTM.text = $"x{multiplier}";
         }
 
