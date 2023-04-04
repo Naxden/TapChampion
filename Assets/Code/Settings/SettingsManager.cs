@@ -1,3 +1,4 @@
+using Global;
 using Saving;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,7 @@ namespace Settings
 {
     public class SettingsManager : MonoBehaviour
     {
-        private bool isVisible = false;
+        private bool inSecondarySettings = false;
         private bool inputEnabled = false;
 
         [SerializeField]
@@ -27,29 +28,37 @@ namespace Settings
         private bool difficultyChanged = false;
         private bool keyBindsChanged = false;
 
-        private void OnEnable()
+        private void Awake()
         {
-            isVisible = true;
-            settingsContent.SetActive(true);
             userSettings = FileManager.GetUserSettings();
         }
 
         private void Update()
         {
-            if (inputEnabled && isVisible)
+            if (inputEnabled && !inSecondarySettings)
             {
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
                     if (!settingsPanel.activeSelf)
-                        OnAppear.Invoke();
+                        OpenSettings();
                     else
-                    {
-                        InvokeManagerEvents();
-
-                        OnDisappear.Invoke();
-                    }
+                        CloseSettings();
                 }
             }
+        }
+
+        public void OpenSettings()
+        {
+            settingsPanel.SetActive(true);
+
+            OnAppear.Invoke();
+        }
+
+        public void CloseSettings()
+        {
+            settingsPanel.SetActive(false);
+
+            OnDisappear.Invoke();
         }
 
         private void InvokeManagerEvents()
@@ -83,9 +92,12 @@ namespace Settings
             FileManager.WriteUserSettings(userSettings);
         }
 
-        public void EnableMainSettings()
+        public void ShowMainSettings()
         {
-            isVisible = true;
+            if (inSecondarySettings)
+                InvokeManagerEvents();
+
+            inSecondarySettings = false;
             settingsContent.SetActive(true);
         }
 
@@ -120,9 +132,9 @@ namespace Settings
         }
 
         // function called by Events on SettingsButtons
-        public void DisableMainSettings()
+        public void HideMainSettings()
         {
-            isVisible = false;
+            inSecondarySettings = true;
             settingsContent.SetActive(false);
         }
 
