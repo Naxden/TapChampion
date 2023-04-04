@@ -214,13 +214,15 @@ namespace Recording
 
         private void ResetSongData()
         {
-            songNoteFile = new NoteFile();
+            imagePath = null;
 
+            songNoteFile = new NoteFile();
             songTitleInput.text = "";
             songAuthorInput.text = "";
             songYearInput.text =  "";
 
-            songNoteFile.highScores = new List<float>{0f, 0f, 0f };
+            songNoteFile.highScores = new List<int>{0, 0, 0};
+            songNoteFile.accuracies = new List<float>{0f, 0f, 0f};
         }
 
         private string GetFormattedTime(float time)
@@ -301,7 +303,6 @@ namespace Recording
 
             songNoteFile.year = Convert.ToInt32(songYearInput.text);
             songNoteFile.author = songAuthorInput.text;
-            //songNoteFile.title = songTitleInput.text;
             
             if (songExists)
             {
@@ -309,7 +310,7 @@ namespace Recording
                 {
                     FileManager.RecordSong(songNoteFile.title,
                                            songNoteFile,
-                                           null,
+                                           imagePath,
                                            null);
                 }
                 else
