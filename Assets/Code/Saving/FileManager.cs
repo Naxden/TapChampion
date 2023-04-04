@@ -4,6 +4,7 @@ using System;
 using UnityEngine.Networking;
 using System.Collections;
 using SimpleFileBrowser;
+using UnityEditor;
 
 namespace Saving
 {
@@ -220,8 +221,11 @@ namespace Saving
 
             NoteFile noteFile = GetNoteFile($"{songPath}/{songTitle}.note");
 
-            for (int i = 0; i < noteFile.highScores.Count; i++)
-                noteFile.highScores[i] = 0f;
+            for (int i = 0; i < Enum.GetNames(typeof(Difficulty)).Length; i++)
+            {
+                noteFile.highScores[i] = 0;
+                noteFile.accuracies[i] = 0f;
+            }
             
             string content = NOTE_MAP_BEGIN;
             content += NoteFileToString(noteFile);
