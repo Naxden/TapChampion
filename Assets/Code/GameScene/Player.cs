@@ -4,15 +4,15 @@ using System.Collections;
 using Saving;
 using SongSelect;
 using Global;
-using System.Runtime.InteropServices;
 using Settings;
+using UnityEditor.PackageManager;
 
 namespace GameScene
 {
     public class Player : MonoBehaviour
     {
-    #region Managers
-        [Header("Managers Links")]
+    #region Externals
+        [Header("External Links")]
         [SerializeField]
         UIController uiController;
 
@@ -26,7 +26,16 @@ namespace GameScene
         private FadeManger fadeManger;
 
         [SerializeField]
+        private SummarizeManager summarizeManager;
+
+        [SerializeField]
+        private CountDownManager countDownManager;
+
+        [SerializeField]
         private Button[] buttons;
+
+        [SerializeField]
+        private UnityEngine.UI.Button[] nextSongButtons;
     #endregion
 
     #region gameNumbers
@@ -49,7 +58,6 @@ namespace GameScene
         private Song song;
         Difficulty difficulty = Difficulty.MEDIUM;
         private float songLength = 0f;
-        private bool songFinished = false;
         
         [SerializeField, Header("Song")]
         AudioSource audioSource;
@@ -60,19 +68,23 @@ namespace GameScene
 
         #region PlayerSettings
         private UserSettings userSettings;
-        float userLag = -0.06f;
         #endregion
 
 
         private void Awake()
         {
-            userSettings = FileManager.GetUserSettings();
-
-            difficulty = (Difficulty)userSettings.difficulty;
-            LoadButtonsKeys();
+            LoadSettings();
+            SetButtonsKeys();
+            SetDifficulty();
+            noteManager.SetUserLag(userSettings.userLag);
         }
 
-        private void LoadButtonsKeys()
+        public void LoadSettings()
+        {
+            userSettings = FileManager.GetUserSettings();
+        }
+
+        public void SetButtonsKeys()
         {
             for (int i = (int)GameKeys.BUTTON1; i < (int)GameKeys.BUTTON5; i++)
             {
@@ -80,11 +92,15 @@ namespace GameScene
             }
         }
 
+        public void SetDifficulty()
+        {
+            difficulty = (Difficulty)userSettings.difficulty;
+        }
+
         private void Start()
         {
             LoadSong();
         }
-
 
         private void Update()
         {
@@ -94,6 +110,11 @@ namespace GameScene
 
                 noteManager.SetTimer(gameTimer);
                 uiController.UpdateTime(gameTimer);
+            }
+
+            if (timerStarted && gameTimer >= songLength)
+            {
+                FinishSong();
             }
         }
 
@@ -126,25 +147,43 @@ namespace GameScene
                                     multiplier);
         }
 
-        private int CalculateAccuracy()
+        private float CalculateAccuracy()
         {
-            return (int)(100f * hitNotesCounter / (hitNotesCounter + missedNotesCounter));
+            return (100f * hitNotesCounter / (hitNotesCounter + missedNotesCounter));
         }
 
-        private void LoadSong()
+        public void LoadSong()
         {
             song = SongManager.songsToPlay[0];
             SongManager.songsToPlay.RemoveAt(0);
+
+            if (SongManager.songsToPlay.Count == 0)
+            {
+                foreach (var button in nextSongButtons)
+                {
+                    button.interactable = false;
+                }
+            }
 
             songBackgroundRenderer.sprite = song.noteSprite;
 
             audioSource.clip = song.noteAudioClip;
             songLength = audioSource.clip.length;
 
-            noteManager.Intialize(GetNoteList(), userLag);
-            
+            noteManager.Intialize(GetNoteList());
+            ResetGameNumbers();
+
             noteManager.SetTimer(gameTimer);
             PlaySong();
+        }
+
+        private void ResetGameNumbers()
+        {
+            gameTimer = -3f;
+            score = 0;
+            hitNotesCounter = 0;
+            missedNotesCounter = 0;
+            multiplier = 1;
         }
 
         public void PlaySong()
@@ -154,15 +193,14 @@ namespace GameScene
 
         private IEnumerator PlaySongRoutine()
         {
-            settingsManager.EnableInput(false);
-
             yield return fadeManger.FadeRoutine(false);
 
             timerStarted = true;
             noteManager.SongIsPlaying(true);
+            noteManager.SpawnNotes(true);
 
-            yield return new WaitForSeconds(3f);
-
+            settingsManager.EnableInput(false);
+            yield return countDownManager.CountDownRoutine();
             settingsManager.EnableInput(true);
 
             audioSource.Play();
@@ -205,11 +243,8 @@ namespace GameScene
 
         private IEnumerator ResumeSongRoutine()
         {
-            Debug.Log("timer started");
             settingsManager.EnableInput(false);
-            //countdown
-            yield return new WaitForSeconds(3f);
-
+            yield return countDownManager.CountDownRoutine();
             settingsManager.EnableInput(true);
 
             audioSource.Play();
@@ -222,10 +257,84 @@ namespace GameScene
         //Change difficulty
 
         //Finish Song
+        private void FinishSong()
+        {
+            audioSource.Stop();
+            timerStarted = false;
+            noteManager.SongIsPlaying(false);
 
-        //Restart Song
+            summarizeManager.Summarize(score, hitNotesCounter, missedNotesCounter);
+            SaveSongScore();
+        }
 
+        private void SaveSongScore()
+        {
+            float accuracy = CalculateAccuracy();
+            bool isNewRecord = score > song.noteFile.highScores[(int)difficulty] || 
+                               accuracy > song.noteFile.accuracies[(int)difficulty];
+            
+            if (!isNewRecord)
+                return;
 
+            string title = song.noteFile.title;
+
+            song.noteFile.highScores[(int)difficulty] = score;
+            song.noteFile.accuracies[(int)difficulty] = accuracy;
+
+            FileManager.RecordSong(title, song.noteFile, null, null);
+        }
+
+        public void NextSong()
+        {
+            StartCoroutine(NextSongRoutine());
+        }
+
+        private IEnumerator NextSongRoutine()
+        {
+            yield return fadeManger.FadeRoutine(true);
+
+            FreshStart();
+
+            LoadSong();
+        }
+
+        //Restart Song is called by Buttons
+        //and only if song is NOT playing And Fader is On
+        public void RestartSong()
+        {
+            StartCoroutine(RestartSongRoutine());
+        }
+
+        private IEnumerator RestartSongRoutine()
+        {
+            yield return fadeManger.FadeRoutine(true);
+
+            FreshStart();
+
+            PlaySong();
+        }
+
+        private void FreshStart()
+        {
+            audioSource.time = 0;
+
+            ResetGameNumbers();
+            uiController.UpdateInfo(score, "", 0f, multiplier);
+
+            foreach (Button button in buttons)
+            {
+                button.ClearNotesQueue();
+            }
+
+            noteManager.ResetSong();
+            noteManager.SetTimer(gameTimer);
+        }
+
+        // Function called by the Exit button
+        public void ClearSongsQueue()
+        {
+            SongManager.songsToPlay.Clear();
+        }
 
 
     }

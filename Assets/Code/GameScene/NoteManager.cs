@@ -25,13 +25,15 @@ namespace GameScene
         bool spawn = false;
         const float NOTE_TRAVEL_DISTANCE = 4.75f;
         const float NOTE_DELAY_TO_ARRIVE = NOTE_TRAVEL_DISTANCE / 3.5f;
+        private const float TIMING_ERROR = -0.06f;
+
 
         float songTimer;
         private bool songIsPlaying = false;
         int noteIndex = 0;
 
         List<NoteObject> notesMap;
-        float timeCalibration = 0f;
+        float userLag = 0f;
         List<NoteMB> sendedNotes = new List<NoteMB>();
 
         void Awake()
@@ -39,11 +41,16 @@ namespace GameScene
             FillQueue();
         }
 
-        public void Intialize(List<NoteObject> noteObjects, float timeCalibration)
+        public void Intialize(List<NoteObject> noteObjects)
         {
-            this.timeCalibration = timeCalibration; 
+            ResetSong();
             notesMap = noteObjects;
-            spawn = true;
+        }
+
+        public void SetUserLag(float userLag)
+        {
+
+            this.userLag = userLag + TIMING_ERROR;
         }
 
         public void SetTimer(float time)
@@ -80,30 +87,23 @@ namespace GameScene
             }
         }
 
-        public void RetrieveNote(NoteMB note, float timeOffset = 0f)
+        public void RetrieveNote(NoteMB note)
         {
-            StartCoroutine(RetrieveNoteRoutine(note, timeOffset));
-        }
-
-        private IEnumerator RetrieveNoteRoutine(NoteMB note, float timeOffset)
-        {
-            yield return new WaitForSeconds(timeOffset);
-
             note.gameObject.SetActive(false);
             note.transform.position = transform.position;
             notesPool.Enqueue(note);
             sendedNotes.Remove(note);
         }
 
-        //int breakIndex = 0;
+        int breakIndex = 0;
 
         void Update()
         {
-            //if (breakIndex < loadedNotes.Count && songTimer >= (loadedNotes[breakIndex].spawnTime))
-            //{
-            //    breakIndex++;
-            //    Debug.Break();
-            //}
+            if (breakIndex < notesMap.Count && songTimer >= (notesMap[breakIndex].spawnTime))
+            {
+                breakIndex++;
+                Debug.Break();
+            }
             if (spawn)
             {
                 if (noteIndex >= notesMap.Count)
@@ -114,7 +114,7 @@ namespace GameScene
                 else
                 {
                     while (noteIndex < notesMap.Count && 
-                           songTimer + NOTE_DELAY_TO_ARRIVE >= (notesMap[noteIndex].spawnTime + timeCalibration))
+                           songTimer + NOTE_DELAY_TO_ARRIVE >= (notesMap[noteIndex].spawnTime + userLag))
                     {
                         SendNote();
                         noteIndex++;
@@ -131,6 +131,11 @@ namespace GameScene
             songIsPlaying = isPlaing;
         }
 
+        public void SpawnNotes(bool spawn)
+        {
+            this.spawn = spawn;
+        }
+
         private void MoveNotes()
         {
             foreach (NoteMB note in sendedNotes)
@@ -139,13 +144,22 @@ namespace GameScene
             }
         }
 
-        void ClearAllNotes()
+        public void ResetSong()
         {
-            foreach (Transform child in transform)
+            if (songIsPlaying)
             {
-                RetrieveNote(child.GetComponent<NoteMB>());
+                Debug.LogWarning("NoteManager.ResetSong(): song is playing");
+                return;
             }
-        }
 
+            spawn = false;
+
+            for (int i = sendedNotes.Count - 1; i >= 0 ; i--)
+            {
+                RetrieveNote(sendedNotes[i]);
+            }
+
+            noteIndex = 0;
+        }
     }
 }
