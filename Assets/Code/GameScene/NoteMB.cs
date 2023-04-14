@@ -14,7 +14,7 @@ namespace GameScene
         [SerializeField]
         Button buttonPosition;
 
-        const float speed = 3.5f;
+        private float velocity = 3.5f;
         Vector3 direction;
 
         public NoteType GetNoteType()
@@ -22,9 +22,10 @@ namespace GameScene
             return noteType;
         }
 
-        public void Initialize(Vector3 startingPos, NoteType noteType, Button targetButton)
+        public void Initialize(Vector3 startingPos, float velocity, NoteType noteType, Button targetButton)
         {
             transform.position = startingPos;
+            this.velocity = velocity;
             buttonPosition = targetButton;
             this.noteType = noteType;
 
@@ -52,7 +53,7 @@ namespace GameScene
 
         public void Move()
         {
-            transform.Translate(direction * speed * Time.deltaTime);
+            transform.Translate(velocity * Time.deltaTime * direction);
         }
 
         //private void OnDrawGizmos()

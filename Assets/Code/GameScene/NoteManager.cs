@@ -23,9 +23,9 @@ namespace GameScene
         #endregion
 
         bool spawn = false;
-        const float NOTE_TRAVEL_DISTANCE = 4.75f;
-        const float NOTE_DELAY_TO_ARRIVE = NOTE_TRAVEL_DISTANCE / 3.5f;
-        private const float TIMING_ERROR = -0.06f;
+        [SerializeField, Range(0.5f, 3f)]
+        private float noteTimeToArrive = 2.5f;
+        private float[] notesVelocity = new float[5];
 
 
         float songTimer;
@@ -39,6 +39,12 @@ namespace GameScene
         void Awake()
         {
             FillQueue();
+
+            for (int i = 0; i < 5; i++)
+            {
+                float distance = Vector3.Distance(noteStartingPositions[i], buttons[i].transform.position);
+                notesVelocity[i] = distance / noteTimeToArrive;
+            }
         }
 
         public void Intialize(List<NoteObject> noteObjects)
@@ -49,8 +55,7 @@ namespace GameScene
 
         public void SetUserLag(float userLag)
         {
-
-            this.userLag = userLag + TIMING_ERROR;
+            this.userLag = userLag;
         }
 
         public void SetTimer(float time)
@@ -62,11 +67,13 @@ namespace GameScene
         {
             NoteMB note = notesPool.Dequeue();
 
+            int buttonIndex = notesMap[noteIndex].buttonIndex;
             NoteType noteType = (NoteType)notesMap[noteIndex].noteType;
-            
-            note.Initialize(noteStartingPositions[notesMap[noteIndex].buttonIndex],
+
+            note.Initialize(noteStartingPositions[buttonIndex],
+                            notesVelocity[buttonIndex],
                             noteType,
-                            buttons[notesMap[noteIndex].buttonIndex]);
+                            buttons[buttonIndex]);
 
             note.UpdateVisuals(notePrefabs[(int)noteType]);
 
@@ -95,15 +102,15 @@ namespace GameScene
             sendedNotes.Remove(note);
         }
 
-        int breakIndex = 0;
+        //int breakIndex = 0;
 
         void Update()
         {
-            if (breakIndex < notesMap.Count && songTimer >= (notesMap[breakIndex].spawnTime))
-            {
-                breakIndex++;
-                Debug.Break();
-            }
+            //if (breakIndex < notesMap.Count && songTimer >= (notesMap[breakIndex].spawnTime))
+            //{
+            //    breakIndex++;
+            //    Debug.Break();
+            //}
             if (spawn)
             {
                 if (noteIndex >= notesMap.Count)
@@ -114,7 +121,7 @@ namespace GameScene
                 else
                 {
                     while (noteIndex < notesMap.Count && 
-                           songTimer + NOTE_DELAY_TO_ARRIVE >= (notesMap[noteIndex].spawnTime + userLag))
+                           songTimer + noteTimeToArrive >= (notesMap[noteIndex].spawnTime + userLag))
                     {
                         SendNote();
                         noteIndex++;
