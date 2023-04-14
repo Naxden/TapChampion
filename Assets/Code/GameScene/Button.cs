@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Saving;
+using TMPro;
 
 namespace GameScene
 {
@@ -9,6 +10,8 @@ namespace GameScene
         [SerializeField]
         KeyCode keyCode;
 
+        [SerializeField]
+        private TextMeshProUGUI keyTag;
         SpriteRenderer buttonSprite;
         
         [SerializeField]
@@ -26,6 +29,7 @@ namespace GameScene
         public void SetKey(KeyCode keyCode)
         {
             this.keyCode = keyCode;
+            keyTag.text = keyCode.ToString();
         }
 
         public void ClearNotesQueue()

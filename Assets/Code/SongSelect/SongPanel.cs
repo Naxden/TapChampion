@@ -54,7 +54,6 @@ namespace SongSelect
 
         public void UpdateScores(int difficulty)
         {
-            Debug.Log($"{Song.noteFile.title} diff changed");
             int score = Song.noteFile.highScores[difficulty];
             float accuracyVal = Song.noteFile.accuracies[difficulty];
             highScore.text = score.ToString();
