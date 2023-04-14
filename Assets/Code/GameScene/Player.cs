@@ -5,7 +5,6 @@ using Saving;
 using SongSelect;
 using Global;
 using Settings;
-using UnityEditor.PackageManager;
 
 namespace GameScene
 {
@@ -14,13 +13,13 @@ namespace GameScene
     #region Externals
         [Header("External Links")]
         [SerializeField]
-        UIController uiController;
+        private UIController uiController;
 
         [SerializeField]
-        NoteManager noteManager;
+        private NoteManager noteManager;
 
         [SerializeField]
-        SettingsManager settingsManager;
+        private SettingsManager settingsManager;
 
         [SerializeField]
         private FadeManger fadeManger;
@@ -41,36 +40,34 @@ namespace GameScene
     #region gameNumbers
         [Header("GameplayValues")]
         [SerializeField]
-        int score;
+        private int score;
         [SerializeField]
-        int hitNotesCounter;
+        private int hitNotesCounter;
         [SerializeField]
-        int missedNotesCounter;
+        private int missedNotesCounter;
         [SerializeField]
-        int multiplier;
+        private int multiplier;
 
         [SerializeField]
         private float gameTimer = -3f;
         private bool timerStarted = false;
-        #endregion
+    #endregion
 
-        #region SongVariables
+    #region SongVariables
         private Song song;
-        Difficulty difficulty = Difficulty.MEDIUM;
+        private Difficulty difficulty = Difficulty.MEDIUM;
         private float songLength = 0f;
         
         [SerializeField, Header("Song")]
-        AudioSource audioSource;
+        private AudioSource audioSource;
 
         [SerializeField]
-        SpriteRenderer songBackgroundRenderer;
-        #endregion
+        private SpriteRenderer songBackgroundRenderer;
+    #endregion
 
-        #region PlayerSettings
         private UserSettings userSettings;
-        #endregion
 
-
+    #region SettingsFunctions
         private void Awake()
         {
             LoadSettings();
@@ -96,6 +93,12 @@ namespace GameScene
         {
             difficulty = (Difficulty)userSettings.difficulty;
         }
+
+        public void SetUserLag()
+        {
+            noteManager.SetUserLag(userSettings.userLag);
+        }
+    #endregion
 
         private void Start()
         {
@@ -152,6 +155,7 @@ namespace GameScene
             return (100f * hitNotesCounter / (hitNotesCounter + missedNotesCounter));
         }
 
+    #region SongGameplayManagement
         public void LoadSong()
         {
             song = SongManager.songsToPlay[0];
@@ -186,6 +190,25 @@ namespace GameScene
             multiplier = 1;
         }
 
+        private List<NoteObject> GetNoteList()
+        {
+            if (song.noteFile == null)
+            {
+                Debug.LogWarning("Player.GetNotes() noteFile is empty");
+                return null;
+            }
+
+            if (difficulty == Difficulty.EASY)
+                return song.noteFile.easy;
+            if (difficulty == Difficulty.MEDIUM)
+                return song.noteFile.medium;
+            if (difficulty == Difficulty.HARD)
+                return song.noteFile.hard;
+
+            Debug.Log("Player.GetNotes() difficulty is not set");
+            return null;
+        }
+
         public void PlaySong()
         {
             StartCoroutine(PlaySongRoutine());
@@ -204,25 +227,6 @@ namespace GameScene
             settingsManager.EnableInput(true);
 
             audioSource.Play();
-        }
-
-        private List<NoteObject> GetNoteList()
-        {
-            if (song.noteFile == null)
-            {
-                Debug.LogWarning("Player.GetNotes() noteFile is empty");
-                return null;
-            }
-
-            if (difficulty == Difficulty.EASY) 
-                return song.noteFile.easy;
-            if (difficulty == Difficulty.MEDIUM) 
-                return song.noteFile.medium;
-            if (difficulty == Difficulty.HARD) 
-                return song.noteFile.hard;
-
-            Debug.Log("Player.GetNotes() difficulty is not set");
-            return null;
         }
 
         //Pause Song
@@ -253,10 +257,7 @@ namespace GameScene
 
             timerStarted = true;
         }
-
-        //Change difficulty
-
-        //Finish Song
+        
         private void FinishSong()
         {
             audioSource.Stop();
@@ -298,8 +299,7 @@ namespace GameScene
             LoadSong();
         }
 
-        //Restart Song is called by Buttons
-        //and only if song is NOT playing And Fader is On
+        // Function called by Buttons
         public void RestartSong()
         {
             StartCoroutine(RestartSongRoutine());
@@ -336,7 +336,18 @@ namespace GameScene
             SongManager.songsToPlay.Clear();
         }
 
+        // Function called by the OnDifficultyChange
+        public void ChangeDifficulty()
+        {
+            LoadSettings();
 
+            SetDifficulty();
+
+            noteManager.Intialize(GetNoteList());
+
+            RestartSong();
+        }
+    #endregion
     }
 }
 
