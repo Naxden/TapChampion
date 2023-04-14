@@ -25,7 +25,7 @@ namespace SongSelect
         private TMP_Text accuracy;
         private SongManager songManager;
 
-        private Song song;
+        public Song Song { get; private set; }
 
         private bool selected = false;
 
@@ -36,41 +36,41 @@ namespace SongSelect
 
         public void SetSong(Song song)
         {
-            this.song = song;
+            Song = song;
 
             UpdateInfo();
         }
         
         private void UpdateInfo()
         {
-            image.sprite = song.noteSprite;
+            image.sprite = Song.noteSprite;
 
-            title.text = song.noteFile.title;
-            author.text = song.noteFile.author;
-            year.text = song.noteFile.year.ToString();
+            title.text = Song.noteFile.title;
+            author.text = Song.noteFile.author;
+            year.text = Song.noteFile.year.ToString();
 
             UpdateScores(songManager.GetDifficulty());
         }
 
         public void UpdateScores(int difficulty)
         {
-            Debug.Log($"{song.noteFile.title} diff changed");
-            int score = song.noteFile.highScores[difficulty];
-            float accuracyVal = song.noteFile.accuracies[difficulty];
+            Debug.Log($"{Song.noteFile.title} diff changed");
+            int score = Song.noteFile.highScores[difficulty];
+            float accuracyVal = Song.noteFile.accuracies[difficulty];
             highScore.text = score.ToString();
             accuracy.text = $"{accuracyVal:0.##} %";
         }
 
         private void Enque()
         {
-            SongManager.songsToPlay.Add(song);
+            SongManager.songsToPlay.Add(Song);
             quePosition.text = SongManager.songsToPlay.Count.ToString();
             quePosition.gameObject.SetActive(true);
         }
 
         private void Deque()
         {
-            SongManager.songsToPlay.Remove(song);
+            SongManager.songsToPlay.Remove(Song);
             quePosition.gameObject.SetActive(false);
         }
 
@@ -80,7 +80,7 @@ namespace SongSelect
             {
                 Enque();
                 selected = true;
-                songManager.PlaySongPreview(song.noteAudioClip);
+                songManager.PlaySongPreview(Song.noteAudioClip);
             }
             else
             {
@@ -92,7 +92,7 @@ namespace SongSelect
         // Function called by ExportButton Click
         public void TryExportSong()
         {
-            songManager.TryExportSong(song.noteFile.title);
+            songManager.TryExportSong(Song.noteFile.title);
         }
 
     }

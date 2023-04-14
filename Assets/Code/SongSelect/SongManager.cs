@@ -3,7 +3,6 @@ using Saving;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Audio;
 
 namespace SongSelect
 {
@@ -20,11 +19,12 @@ namespace SongSelect
         private FadeManger fadeManger;
 
         private Vector3 spawnPosition = new Vector3(0f, 200f, 0f);
-        private List<Song> loadedSongs = new List<Song>();
+        private List<SongPanel> loadedSongPanels = new List<SongPanel>();
         public static List<Song> songsToPlay = new List<Song>();
 
         private Difficulty difficulty;
 
+        private int sortMode = 0;
         private const float startVolume = 0.1f;
         float endVolume = 1.0f;
         [SerializeField]
@@ -67,13 +67,14 @@ namespace SongSelect
             noteFile = FileManager.GetNoteFile(songDirPath + $"/{songTitle}.note");
 
             Song song = new Song(noteFile, audioClip, sprite);
-            loadedSongs.Add(song);
             
             GameObject newSong = Instantiate(songPrefab, songsHolder.transform);
             newSong.GetComponent<RectTransform>().localPosition = spawnPosition;
             spawnPosition.y -= 220f;
             newSong.name = songTitle;
-            newSong.GetComponent<SongPanel>().SetSong(song);
+            SongPanel songPanel = newSong.GetComponent<SongPanel>();
+            songPanel.SetSong(song);
+            loadedSongPanels.Add(songPanel);
         }
 
         public void PlaySongPreview(AudioClip audioClip)
@@ -143,17 +144,6 @@ namespace SongSelect
             return (int)difficulty;
         }
 
-        public void UpdateDifficulty()
-        {
-            difficulty = (Difficulty)FileManager.GetUserSettings().difficulty;
-
-            foreach (SongPanel songs in songsHolder.GetComponentsInChildren<SongPanel>())
-            {
-                Debug.Log(songs.name);
-                //songs.GetComponent<SongPanel>().UpdateHighScore((int)difficulty);
-            }
-        }
-
         public void TryExportSong(string songTitle)
         {
             songToExport = songTitle;
@@ -177,6 +167,61 @@ namespace SongSelect
             Debug.Log($"I am exporting: {songToExport}");
         }
 
+        public void UpdateDifficulty()
+        {
+            difficulty = (Difficulty)FileManager.GetUserSettings().difficulty;
+            int previousMode = sortMode;
+            sortMode = -1;
+
+            foreach (SongPanel songPanel in loadedSongPanels)
+            {
+                songPanel.UpdateScores((int)difficulty);
+            }
+
+            SortSong(previousMode);
+        }
+
+        public void SortSong(int mode)
+        {
+            int diffNum = GetDifficulty();
+
+            if (sortMode == mode)
+                loadedSongPanels.Reverse();
+            else
+            {
+                switch (mode)
+                {
+                    case 0:
+                        loadedSongPanels.Sort((x, y) => x.Song.noteFile.title.CompareTo(y.Song.noteFile.title));
+                        break;
+                    case 1:
+                        loadedSongPanels.Sort((x, y) => x.Song.noteFile.author.CompareTo(y.Song.noteFile.author));
+                        break;
+                    case 2:
+                        loadedSongPanels.Sort((x, y) => x.Song.noteFile.year.CompareTo(y.Song.noteFile.year));
+                        break;
+                    case 3:
+                        loadedSongPanels.Sort((x, y) => x.Song.noteFile.highScores[diffNum].CompareTo(y.Song.noteFile.highScores[diffNum]));
+                        break;
+                    case 4:
+                        loadedSongPanels.Sort((x, y) => x.Song.noteFile.accuracies[diffNum].CompareTo(y.Song.noteFile.accuracies[diffNum]));
+                        break;
+                }
+            }
+
+            sortMode = mode;
+            ReorderSongs();
+        }
+
+        private void ReorderSongs()
+        {
+            spawnPosition = new Vector3(0f, 200f, 0f);
+            foreach (SongPanel song in loadedSongPanels)
+            {
+                song.GetComponent<RectTransform>().localPosition = spawnPosition;
+                spawnPosition.y -= 220f;
+            }
+        }
     }
 
 }
