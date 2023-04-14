@@ -69,16 +69,16 @@ namespace Settings
                 OnCalibrationChanged.Invoke();
             }
 
-            if (difficultyChanged)
-            {
-                difficultyChanged = false;
-                OnDifficultyChanged.Invoke();
-            }
-
             if (keyBindsChanged)
             {
                 keyBindsChanged = false;
                 OnKeyBindsChanged.Invoke();
+            }
+
+            if (difficultyChanged)
+            {
+                difficultyChanged = false;
+                OnDifficultyChanged.Invoke();
             }
         }
 
