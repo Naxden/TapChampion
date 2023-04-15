@@ -18,7 +18,9 @@ namespace SongSelect
         [SerializeField]
         private FadeManger fadeManger;
 
-        private Vector3 spawnPosition = new Vector3(0f, 200f, 0f);
+        private const float SONG_PANEL_SPACE = 235f;
+        private Vector3 initialSpawnPosition = new Vector3(-60f, 0f, 0f);
+        private Vector3 spawnPosition;
         private List<SongPanel> loadedSongPanels = new List<SongPanel>();
         public static List<Song> songsToPlay = new List<Song>();
 
@@ -47,13 +49,30 @@ namespace SongSelect
         {
             string[] paths = FileManager.GetAllSongs();
 
+            PrepareHolder(paths.Length);
+            
             foreach (string path in paths)
             {
                 yield return InstantiateSongRoutine(path);
             }
 
+            SortSong(0);
+
             yield return fadeManger.FadeRoutine(false);
         }
+
+        private void PrepareHolder(int songCount)
+        {
+            RectTransform rectTransform = songsHolder.GetComponent<RectTransform>();
+            float height = songCount * SONG_PANEL_SPACE;
+            float xPos = rectTransform.localPosition.x;
+
+            rectTransform.sizeDelta = new Vector2(1700f, height);
+            rectTransform.localPosition = new Vector3(xPos, -(height / 2), 0);
+
+            initialSpawnPosition.y =  height / 2 - SONG_PANEL_SPACE / 2;
+        }
+
         private IEnumerator InstantiateSongRoutine(string songDirPath)
         {
             string songTitle = FileManager.GetPartOfString(songDirPath, "\\", "\0");
@@ -69,8 +88,6 @@ namespace SongSelect
             Song song = new Song(noteFile, audioClip, sprite);
             
             GameObject newSong = Instantiate(songPrefab, songsHolder.transform);
-            newSong.GetComponent<RectTransform>().localPosition = spawnPosition;
-            spawnPosition.y -= 220f;
             newSong.name = songTitle;
             SongPanel songPanel = newSong.GetComponent<SongPanel>();
             songPanel.SetSong(song);
@@ -185,6 +202,9 @@ namespace SongSelect
         {
             int diffNum = GetDifficulty();
 
+            if (loadedSongPanels.Count == 0)
+                return;
+
             if (sortMode == mode)
                 loadedSongPanels.Reverse();
             else
@@ -215,11 +235,11 @@ namespace SongSelect
 
         private void ReorderSongs()
         {
-            spawnPosition = new Vector3(0f, 200f, 0f);
+            spawnPosition = initialSpawnPosition;
             foreach (SongPanel song in loadedSongPanels)
             {
                 song.GetComponent<RectTransform>().localPosition = spawnPosition;
-                spawnPosition.y -= 220f;
+                spawnPosition.y -= SONG_PANEL_SPACE;
             }
         }
     }

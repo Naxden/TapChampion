@@ -5,6 +5,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using SimpleFileBrowser;
 using UnityEditor;
+using JetBrains.Annotations;
 
 namespace Saving
 {
@@ -96,6 +97,11 @@ namespace Saving
         {
             string songDirPath = GetPath("Songs");
             return Directory.GetDirectories(songDirPath);
+        }
+
+        public static int GetSongsCount()
+        {
+            return GetAllSongs().Length;
         }
 
         private static string ReadFile(string path)
