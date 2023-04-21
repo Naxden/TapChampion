@@ -1,6 +1,3 @@
-using Saving;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,15 +26,10 @@ namespace SongSelect
 
         private bool selected = false;
 
-        private void Awake()
-        {
-            songManager = FindObjectOfType<SongManager>();
-        }
-
-        public void SetSong(Song song)
+        public void Initialize(Song song, SongManager songManager)
         {
             Song = song;
-
+            this.songManager = songManager;
             UpdateInfo();
         }
         
@@ -60,16 +52,21 @@ namespace SongSelect
             accuracy.text = $"{accuracyVal:0.##} %";
         }
 
+        public void SetQueueNum(int queueNum)
+        {
+            quePosition.text = queueNum.ToString();
+            quePosition.gameObject.SetActive(true);
+        }
+
         private void Enque()
         {
-            SongManager.songsToPlay.Add(Song);
-            quePosition.text = SongManager.songsToPlay.Count.ToString();
-            quePosition.gameObject.SetActive(true);
+            int queNum = songManager.EnqueSong(Song);
+            SetQueueNum(queNum);
         }
 
         private void Deque()
         {
-            SongManager.songsToPlay.Remove(Song);
+            songManager.DequeSong(Song);
             quePosition.gameObject.SetActive(false);
         }
 

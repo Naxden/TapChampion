@@ -90,7 +90,7 @@ namespace SongSelect
             GameObject newSong = Instantiate(songPrefab, songsHolder.transform);
             newSong.name = songTitle;
             SongPanel songPanel = newSong.GetComponent<SongPanel>();
-            songPanel.SetSong(song);
+            songPanel.Initialize(song, this);
             loadedSongPanels.Add(songPanel);
         }
 
@@ -154,6 +154,39 @@ namespace SongSelect
             }
 
             audioSource.Stop();
+        }
+
+        public int EnqueSong(Song song)
+        {
+            if (songsToPlay.Contains(song))
+            {
+                Debug.LogWarning($"Song: {song.noteFile.title} is already queued");
+                return -1;
+            }
+
+            songsToPlay.Add(song);
+            return songsToPlay.Count;
+        }
+
+        public void DequeSong(Song song)
+        {
+            if (!songsToPlay.Contains(song))
+            {
+                Debug.LogWarning($"Song: {song.noteFile.title} was not queued!");
+                return;
+            }
+
+            songsToPlay.Remove(song);
+            UpdatePanelsQueNums();
+        }
+
+        private void UpdatePanelsQueNums()
+        {
+            for (int i = 0; i < songsToPlay.Count; i++)
+            {
+                SongPanel panelToNotify = loadedSongPanels.Find(x => x.Song.Equals(songsToPlay[i]));
+                panelToNotify.SetQueueNum(i + 1);
+            }
         }
 
         public int GetDifficulty()
