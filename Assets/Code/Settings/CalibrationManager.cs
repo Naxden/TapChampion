@@ -15,7 +15,7 @@ namespace Settings
 
         private float userLag;
 
-        private bool LagChanged = false;
+        private bool lagChanged = false;
 
         private void OnEnable()
         {
@@ -24,15 +24,15 @@ namespace Settings
 
         void Update()
         {
-            if (LagChanged)
+            if (lagChanged)
             {
                 if (Input.GetKeyDown(KeyCode.Return))
                 {
                     settingsManager.SetUserLag(userLag);
                     settingsManager.SaveSettings();
-                    settingsManager.DifficultyChanged();
+                    settingsManager.CalibrationChanged();
 
-                    LagChanged = false;
+                    lagChanged = false;
                 }
             }
 
@@ -48,27 +48,27 @@ namespace Settings
 
         public void IncreseLag()
         {
-            userLag += 0.25f;
-            LagChanged = true;
+            userLag += 0.1f;
+            lagChanged = true;
             UpdateText();
         }
 
         public void DecreaseLag()
         {
-            userLag -= 0.25f;
-            LagChanged = true;
+            userLag -= 0.1f;
+            lagChanged = true;
             UpdateText();
         }
 
         private void UpdateText()
         {
-            userLagText.text = string.Format("{0:0.00}", userLag.ToString());
+            userLagText.text = $"{userLag:0.0}";
         }
 
         private void ResetToDefault()
         {
             userLag = 0f;
-            LagChanged = true;
+            lagChanged = true;
             UpdateText();
         }
     }
