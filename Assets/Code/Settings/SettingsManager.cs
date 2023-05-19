@@ -16,6 +16,9 @@ namespace Settings
         [SerializeField]
         GameObject settingsContent;
 
+        [SerializeField]
+        SoundManager soundManager;
+
         private UserSettings userSettings;
 
         public UnityEvent OnAppear;
@@ -31,6 +34,11 @@ namespace Settings
         private void Awake()
         {
             userSettings = FileManager.GetUserSettings();
+        }
+
+        private void Start()
+        {
+            soundManager.InitializeSounds(userSettings.musicVolume, userSettings.sfxVolume);
         }
 
         private void Update()
@@ -119,6 +127,26 @@ namespace Settings
         public void SetDifficulty(int difficulty)
         {
             userSettings.difficulty = difficulty;
+        }
+
+        public float GetMusicVolume()
+        {
+            return userSettings.musicVolume;
+        }
+
+        public void SetMusicVolume(float musicVolume)
+        {
+            userSettings.musicVolume = musicVolume;
+        }
+
+        public float GetSFXVolume()
+        {
+            return userSettings.sfxVolume;
+        }
+
+        public void SetSFXVolume(float sfxVolume)
+        {
+            userSettings.sfxVolume = sfxVolume;
         }
 
         public List<int> GetKeys()

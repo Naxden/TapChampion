@@ -7,6 +7,8 @@ namespace Saving
     {
         public int difficulty;
         public float userLag;
+        public float musicVolume;
+        public float sfxVolume;
         public List<int> keys;
     }
 
