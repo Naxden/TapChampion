@@ -1,6 +1,8 @@
 ﻿{
     "difficulty": 0,
     "userLag": 0.0,
+    "musicVolume": 0.10244239121675492,
+    "sfxVolume": 0.8809889554977417,
     "keys": [
         100,
         102,

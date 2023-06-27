@@ -1,8 +1,10 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Recording.Note;
 using Saving;
-using System.Runtime.InteropServices;
+using Debug = UnityEngine.Debug;
 
 namespace GameScene
 {
@@ -27,6 +29,14 @@ namespace GameScene
         private float noteTimeToArrive = 2.5f;
         private float[] notesVelocity = new float[5];
 
+        [SerializeField]
+        private GameObject connectingLinePrefab;
+        private NoteMB leftConnectingNote = null;
+        private List<ConnectingLine> connectingLines = new List<ConnectingLine>();
+
+        [SerializeField]
+        private GameObject longNoteConnectorPrefab;
+        private NoteMB[] sendedLongBeginNotes = new NoteMB[5];
 
         float songTimer;
         private bool songIsPlaying = false;
@@ -63,24 +73,16 @@ namespace GameScene
             songTimer = time;
         }
 
-        private void SendNote()
+        public void SongIsPlaying(bool isPlaing)
         {
-            NoteMB note = notesPool.Dequeue();
-
-            int buttonIndex = notesMap[noteIndex].buttonIndex;
-            NoteType noteType = (NoteType)notesMap[noteIndex].noteType;
-
-            note.Initialize(noteStartingPositions[buttonIndex],
-                            notesVelocity[buttonIndex],
-                            noteType,
-                            buttons[buttonIndex]);
-
-            note.UpdateVisuals(notePrefabs[(int)noteType]);
-
-            note.gameObject.SetActive(true);
-
-            sendedNotes.Add(note);
+            songIsPlaying = isPlaing;
         }
+
+        public void SpawnNotes(bool spawn)
+        {
+            this.spawn = spawn;
+        }
+
 
         private void FillQueue()
         {
@@ -100,6 +102,27 @@ namespace GameScene
             note.transform.position = transform.position;
             notesPool.Enqueue(note);
             sendedNotes.Remove(note);
+            note.NoteRemoved();
+        }
+
+        public void ResetSong()
+        {
+            if (songIsPlaying)
+            {
+                Debug.LogWarning("NoteManager.ResetSong(): song is playing");
+                return;
+            }
+
+            spawn = false;
+
+            for (int i = sendedNotes.Count - 1; i >= 0; i--)
+            {
+                RetrieveNote(sendedNotes[i]);
+            }
+
+            noteIndex = 0;
+
+            leftConnectingNote = null;
         }
 
         //int breakIndex = 0;
@@ -115,7 +138,7 @@ namespace GameScene
             {
                 if (noteIndex >= notesMap.Count)
                 {
-                    Debug.LogWarning("Load notes, index out of bound");
+                    Debug.Log("Load notes, index out of bound");
                     spawn = false;
                 }
                 else
@@ -124,6 +147,7 @@ namespace GameScene
                            songTimer + noteTimeToArrive >= (notesMap[noteIndex].spawnTime + userLag))
                     {
                         SendNote();
+                        CheckConnectingLine();
                         noteIndex++;
                     }
                 }
@@ -133,14 +157,124 @@ namespace GameScene
                 MoveNotes();
         }
 
-        public void SongIsPlaying(bool isPlaing)
+        private void SendNote()
         {
-            songIsPlaying = isPlaing;
+            NoteMB note = notesPool.Dequeue();
+
+            int buttonIndex = notesMap[noteIndex].buttonIndex;
+            NoteType noteType = (NoteType)notesMap[noteIndex].noteType;
+
+            note.Initialize(noteStartingPositions[buttonIndex],
+                            notesVelocity[buttonIndex],
+                            noteType,
+                            buttonIndex,
+                            buttons[buttonIndex]);
+
+            note.UpdateVisuals(notePrefabs[(int)noteType]);
+
+            note.gameObject.SetActive(true);
+
+            if (noteType != NoteType.Short)
+                SendLongNote(note, buttonIndex);
+
+            sendedNotes.Add(note);
         }
 
-        public void SpawnNotes(bool spawn)
+        private void SendLongNote(NoteMB longNote, int buttonIndex)
         {
-            this.spawn = spawn;
+            if (longNote == null)
+            {
+                Debug.LogError("SendLongNote: longNote argument is null");
+                return;
+            }
+
+            if (longNote.GetNoteType() == NoteType.LongBegin)
+            {
+                LongNoteConnector connector = Instantiate(longNoteConnectorPrefab).GetComponent<LongNoteConnector>();
+
+                longNote.SetNoteConnector(connector);
+
+                connector.SetBegin(noteStartingPositions[buttonIndex]);
+                connector.SetEnd(noteStartingPositions[buttonIndex]);
+                connector.EnableLine();
+
+                sendedLongBeginNotes[buttonIndex] = longNote;
+            }
+            else
+            {
+                NoteMB beginNote = sendedLongBeginNotes[buttonIndex];
+
+                if (beginNote == null)
+                {
+                    Debug.LogError("SendLongNote: longNoteBegin is null");
+                    return;
+                }
+
+                LongNoteConnector noteConnector = beginNote.GetNoteConnector();
+
+                longNote.SetNoteConnector(noteConnector);
+
+                sendedLongBeginNotes[buttonIndex] = null;
+            }
+        }
+
+        private void CheckConnectingLine()
+        {
+            if (noteIndex == notesMap.Count - 1)
+            {
+                if (leftConnectingNote != null)
+                    SpawnConnectingLine();
+                return;
+            }
+
+            float currentNoteSpawnTime = notesMap[noteIndex].spawnTime;
+            float nextNoteSpawnTime = notesMap[noteIndex + 1].spawnTime;
+
+            if (nextNoteSpawnTime - currentNoteSpawnTime <= 0.11f)
+            {
+                if (leftConnectingNote == null)
+                {
+                    leftConnectingNote = sendedNotes[^1];
+                }
+            }
+            else
+                if (leftConnectingNote != null)
+                    SpawnConnectingLine();
+        }
+
+        private void SpawnConnectingLine()
+        {
+            ConnectingLine connectingLine = Instantiate(connectingLinePrefab).GetComponent<ConnectingLine>();
+
+            NoteMB rightConnectingNote = sendedNotes[^1];
+
+            int beginIndex = sendedNotes.IndexOf(leftConnectingNote);
+            int endIndex = sendedNotes.IndexOf(rightConnectingNote, beginIndex + 1);
+
+            for (int index = beginIndex; index <= endIndex; index++)
+            {
+                sendedNotes[index].SetConnectingLine(connectingLine);
+            }
+
+            int beginNoteButton = leftConnectingNote.GetButtonIndex();
+            int endNoteButton = rightConnectingNote.GetButtonIndex();
+
+            connectingLine.Initialize(beginNoteButton, endNoteButton, noteTimeToArrive, this);
+            connectingLines.Add(connectingLine);
+
+            leftConnectingNote = null;
+        }
+
+        public void DestroyConnectingLine(ConnectingLine connectingLine)
+        {
+            if (connectingLines.Count <= 0)
+                return;
+
+            if (!connectingLines.Contains(connectingLine))
+                return;
+
+            connectingLines.Remove(connectingLine);
+            Destroy(connectingLine.gameObject);
         }
 
         private void MoveNotes()
@@ -149,24 +283,11 @@ namespace GameScene
             {
                 note.Move();
             }
-        }
 
-        public void ResetSong()
-        {
-            if (songIsPlaying)
+            for (int i = 0; i < connectingLines.Count; i++)
             {
-                Debug.LogWarning("NoteManager.ResetSong(): song is playing");
-                return;
+                connectingLines[i].Move();
             }
-
-            spawn = false;
-
-            for (int i = sendedNotes.Count - 1; i >= 0 ; i--)
-            {
-                RetrieveNote(sendedNotes[i]);
-            }
-
-            noteIndex = 0;
         }
     }
 }

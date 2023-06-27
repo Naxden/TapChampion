@@ -3,6 +3,7 @@ using Saving;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace SongSelect
 {
@@ -35,6 +36,9 @@ namespace SongSelect
         private string songToExport;
         [SerializeField]
         private GameObject exportPrompt;
+
+        [SerializeField]
+        private Button playGameButton;
 
         private void Start()
         {
@@ -165,6 +169,7 @@ namespace SongSelect
             }
 
             songsToPlay.Add(song);
+            playGameButton.interactable = true;
             return songsToPlay.Count;
         }
 
@@ -178,6 +183,9 @@ namespace SongSelect
 
             songsToPlay.Remove(song);
             UpdatePanelsQueNums();
+
+            if (songsToPlay.Count == 0)
+                playGameButton.interactable = false;
         }
 
         private void UpdatePanelsQueNums()

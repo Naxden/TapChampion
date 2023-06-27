@@ -83,7 +83,7 @@ namespace GameScene
 
         public void SetButtonsKeys()
         {
-            for (int i = (int)GameKeys.BUTTON1; i < (int)GameKeys.BUTTON5; i++)
+            for (int i = (int)GameKeys.BUTTON1; i <= (int)GameKeys.BUTTON5; i++)
             {
                 buttons[i].SetKey((KeyCode)userSettings.keys[i]);
             }

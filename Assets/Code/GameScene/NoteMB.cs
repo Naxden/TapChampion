@@ -9,23 +9,39 @@ namespace GameScene
     {
 
         [SerializeField]
-        NoteType noteType;
+        protected NoteType noteType;
 
         [SerializeField]
         Button buttonPosition;
+        private int buttonIndex = -1;
 
         private float velocity = 3.5f;
         Vector3 direction;
+
+        ConnectingLine connectingLine = null;
+
+        private LongNoteConnector noteConnector;
 
         public NoteType GetNoteType()
         {
             return noteType;
         }
 
-        public void Initialize(Vector3 startingPos, float velocity, NoteType noteType, Button targetButton)
+        public int GetButtonIndex()
+        {
+            return buttonIndex;
+        }
+
+        public void SetConnectingLine(ConnectingLine connectingLine)
+        {
+            this.connectingLine = connectingLine;
+        }
+
+        public void Initialize(Vector3 startingPos, float velocity, NoteType noteType, int buttonIndex, Button targetButton)
         {
             transform.position = startingPos;
             this.velocity = velocity;
+            this.buttonIndex = buttonIndex;
             buttonPosition = targetButton;
             this.noteType = noteType;
 
@@ -54,6 +70,30 @@ namespace GameScene
         public void Move()
         {
             transform.Translate(velocity * Time.deltaTime * direction);
+
+            if (noteType == NoteType.LongBegin)
+                noteConnector.SetBegin(transform.position);
+            else if (noteType == NoteType.LongEnd)
+                noteConnector.SetEnd(transform.position);
+        }
+
+        public LongNoteConnector GetNoteConnector()
+        {
+            return noteConnector;
+        }
+
+        public void SetNoteConnector(LongNoteConnector noteConnector)
+        {
+            this.noteConnector = noteConnector;
+        }
+
+        public void NoteRemoved()
+        {
+            if (connectingLine != null)
+                connectingLine.NoteRemoved();
+
+            if (noteType == NoteType.LongEnd)
+                Destroy(noteConnector.gameObject);
         }
 
         //private void OnDrawGizmos()
