@@ -11,7 +11,7 @@ using Global;
 
 namespace Recording
 {
-    [System.Serializable]
+    [Serializable]
     public class MyFloatEvent : UnityEvent<float> { }
 
     public class Recorder : MonoBehaviour
@@ -354,7 +354,6 @@ namespace Recording
                 imagePath = null;
         }
 
-
         public void PlaySong()
         {
             audioSource.Play();
@@ -397,7 +396,6 @@ namespace Recording
             audioSource.time = timeElapsed;
             currentTime.text = GetFormattedTime(timeElapsed);
         }
-
     }
 }
 

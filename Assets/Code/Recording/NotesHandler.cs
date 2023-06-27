@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using Recording.Note;
+using System;
 
 namespace Recording
 {
@@ -14,6 +14,9 @@ namespace Recording
         private List<LongNote> longNotes;
 
         private bool firstSnap = true;
+
+        private const float minX = -5f;
+        private float maxX = 0f;
 
         public void SetStartPosition(Vector3 position)
         {
@@ -31,6 +34,13 @@ namespace Recording
                 }
             }
             transform.position = position;
+        }
+
+        //Function called by OnSongLoadEvent
+        public void SetSongLength(float  length)
+        {
+            maxX = length * 7.5f - 5.375f + 0.375f;
+            maxX = Mathf.Ceil((maxX) / 0.75f) * 0.75f - 0.5f;
         }
 
         public void AddChild(GameObject note)
@@ -88,50 +98,59 @@ namespace Recording
 
             Vector3 newPosition = transform.position;
 
-            if (Mathf.Abs(destination.x - transform.position.x) >= 0.75f)
+            Tuple<float, float> xRange = XRange();
+
+            if (Mathf.Abs(destination.x - transform.position.x) >= 0.75f && //MoveX if movement is >= than step
+                 (destination.x < transform.position.x && xRange.Item1 > minX ||  // Move Left if you can move left
+                 destination.x > transform.position.x && xRange.Item2 < maxX)) // Move Right if you can move right
             {
                 newPosition.x = Mathf.Ceil((destination.x) / 0.75f) * 0.75f - 0.5f;
             }
 
-            float childMinYPos = MinMoveRange();
-            float childMaxYPos = MaxMoveRange();
-
+            Tuple<float, float> yRange = YRange();
             newPosition.y = Mathf.Round(destination.y / 1.25f) * 1.25f;
 
-            if (childMinYPos == -3.75f && newPosition.y < transform.position.y ||
-                childMaxYPos ==  1.25f && newPosition.y > transform.position.y)
+            if (yRange.Item1 == -3.75f && newPosition.y < transform.position.y ||
+                yRange.Item2 ==  1.25f && newPosition.y > transform.position.y)
             {
                 newPosition.y = transform.position.y;
             }
 
+ 
             transform.position = newPosition;
-            UpdateLongNotes();
+            UpdateLongNotes();        
         }
 
-        private float MinMoveRange()
+        private Tuple<float, float> XRange()
         {
-            float min = 1.25f;
+            float min = float.MaxValue;
+            float max = float.MinValue;
 
             foreach (Transform child in transform)
             {
-                if (child.position.y < min)
-                        min = child.position.y;
+                if (child.position.x < min)
+                    min = child.position.x;
+                if (child.position.x > max)
+                    max = child.position.x;
             }
 
-            return min;
+            return Tuple.Create(min, max);
         }
 
-        private float MaxMoveRange()
+        private Tuple<float, float> YRange()
         {
+            float min = 1.25f;
             float max = -3.75f;
 
             foreach (Transform child in transform)
             {
-                if (child.position.y > max)
+                if (child.position.y < min)
+                    min = child.position.y;
+                if (child.position.y >  max)
                     max = child.position.y;
             }
 
-            return max;
+            return Tuple.Create(min, max);
         }
 
         private void UpdateLongNotes()
