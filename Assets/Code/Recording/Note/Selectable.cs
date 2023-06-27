@@ -90,8 +90,8 @@ namespace Recording.Note
             isColliding = false;
             if (longNoteError)
             {
-                longNoteError = false;
                 GetComponent<LongNote>().MoveLongNote();
+                longNoteError = false;
             }
             UpdateVisuals();
         }

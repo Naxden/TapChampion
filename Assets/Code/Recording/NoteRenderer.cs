@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Saving;
 using Recording.Note;
+using UnityEngine.Events;
+using Slider = UnityEngine.UI.Slider;
 
 namespace Recording
 {
@@ -12,7 +14,13 @@ namespace Recording
         [SerializeField]
         private GameObject[] notePrefabs = new GameObject[3];
 
-        private float[] tracksPositions = {1.25f, 0f, -1.25f, -2.5f, -3.75f};
+        [SerializeField]
+        private Slider slider;
+
+        [SerializeField] 
+        private Transform timeLine;
+
+        private readonly float[] tracksPositions = {1.25f, 0f, -1.25f, -2.5f, -3.75f};
 
         private List<Track> tracksList;
         private float songLength;
@@ -62,8 +70,14 @@ namespace Recording
             note.transform.SetParent(transform, false);
 
             tracksList[track].Add(note);
-            
-            if (noteType == NoteType.LongEnd) 
+
+            if (noteType == NoteType.LongBegin)
+            {
+                LongNoteConnector longNoteConnector = note.GetComponent<LongNoteConnector>();
+                longNoteConnector.SetEnd(timeLine);
+                slider.onValueChanged.AddListener(longNoteConnector.UpdateLine);
+            }
+            else if (noteType == NoteType.LongEnd)
             {
                 int indexOfPreLastNote = tracksList[track].Count - 2;
                 if (indexOfPreLastNote < 0)
@@ -71,11 +85,16 @@ namespace Recording
                     Debug.LogWarning("Adding connection, Begin-End notes, index less than zero");
                     return false;
                 }
-                
+                    
                 LongNote longBegin = tracksList[track][indexOfPreLastNote].transform.GetComponent<LongNote>();
                 longBegin.SetOtherHalf(note);
                 note.GetComponent<LongNote>().SetOtherHalf(longBegin.gameObject);
                 longBegin.InitializePair();
+
+                LongNoteConnector longNoteConnector = longBegin.gameObject.GetComponent<LongNoteConnector>();
+                slider.onValueChanged.RemoveListener(longNoteConnector.UpdateLine);
+                longNoteConnector.SetEnd(note.transform);
+                longNoteConnector.UpdateLine(0f);
             }
 
             return true;
@@ -121,9 +140,7 @@ namespace Recording
             {
                 checkingPos.x = x;
                 if (IsNoteThere(checkingPos) != null)
-                {
                     return true;
-                }
             }
 
             return false;
@@ -177,7 +194,7 @@ namespace Recording
         private void SortTrack(int track)
         {
             tracksList[track].Sort((p, q) => 
-                            p.transform.position.x.CompareTo(q.transform.position.x));
+                p.transform.position.x.CompareTo(q.transform.position.x));
         }
 
         public List<NoteObject> GetSortedNoteMap()

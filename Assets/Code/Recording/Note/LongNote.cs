@@ -65,6 +65,8 @@ namespace Recording.Note
 
             mySelectable.SetLongNoteError(!IsPositionValid());
             mySelectable.UpdateVisuals();
+
+            UpdateNoteConnector();
         }
 
         private bool IsPositionValid()
@@ -76,7 +78,37 @@ namespace Recording.Note
             if (!(beginToEnd.x < 0 ^ isBeginNote))
                 return false;
 
+            if (IsNoteBetween())
+                return false;
+
             return true;
+        }
+
+        private bool IsNoteBetween()
+        {
+            Collider2D[] colliders = new Collider2D[10];
+
+            int collidersCount = boxCollider.OverlapCollider(new ContactFilter2D().NoFilter(), colliders);
+
+            if (collidersCount == 0) 
+                return false;
+
+            for (int i = 0; i < collidersCount; i++)
+            {
+                if (colliders[i].CompareTag("Note"))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void UpdateNoteConnector()
+        {
+            LongNoteConnector longNoteConnector = transform.GetComponent<LongNoteConnector>();
+            
+            if (longNoteConnector == null)
+                longNoteConnector = otherHalf.GetComponent<LongNoteConnector>();
+            longNoteConnector.UpdateLine(0f);
         }
     }
 }
