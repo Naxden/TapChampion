@@ -1,10 +1,6 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Recording.Note;
 using Saving;
-using Debug = UnityEngine.Debug;
 
 namespace GameScene
 {
@@ -24,7 +20,9 @@ namespace GameScene
         Queue<NoteMB> notesPool = new Queue<NoteMB>(100);
         #endregion
 
-        bool spawn = false;
+        private const float precision = 0.09f;
+
+        private bool spawn = false;
         [SerializeField, Range(0.5f, 3f)]
         private float noteTimeToArrive = 2.5f;
         private float[] notesVelocity = new float[5];
@@ -32,7 +30,7 @@ namespace GameScene
         [SerializeField]
         private GameObject connectingLinePrefab;
         private NoteMB leftConnectingNote = null;
-        private List<ConnectingLine> connectingLines = new List<ConnectingLine>();
+        private List<ConnectingLine> sendedConnectingLines = new List<ConnectingLine>();
 
         [SerializeField]
         private GameObject longNoteConnectorPrefab;
@@ -230,7 +228,7 @@ namespace GameScene
             float currentNoteSpawnTime = notesMap[noteIndex].spawnTime;
             float nextNoteSpawnTime = notesMap[noteIndex + 1].spawnTime;
 
-            if (nextNoteSpawnTime - currentNoteSpawnTime <= 0.11f)
+            if (nextNoteSpawnTime - currentNoteSpawnTime <= precision)
             {
                 if (leftConnectingNote == null)
                 {
@@ -259,21 +257,21 @@ namespace GameScene
             int beginNoteButton = leftConnectingNote.GetButtonIndex();
             int endNoteButton = rightConnectingNote.GetButtonIndex();
 
-            connectingLine.Initialize(beginNoteButton, endNoteButton, noteTimeToArrive, this);
-            connectingLines.Add(connectingLine);
+            connectingLine.Initialize(beginNoteButton, endNoteButton, this);
+            sendedConnectingLines.Add(connectingLine);
 
             leftConnectingNote = null;
         }
 
         public void DestroyConnectingLine(ConnectingLine connectingLine)
         {
-            if (connectingLines.Count <= 0)
+            if (sendedConnectingLines.Count <= 0)
                 return;
 
-            if (!connectingLines.Contains(connectingLine))
+            if (!sendedConnectingLines.Contains(connectingLine))
                 return;
 
-            connectingLines.Remove(connectingLine);
+            sendedConnectingLines.Remove(connectingLine);
             Destroy(connectingLine.gameObject);
         }
 
@@ -284,9 +282,9 @@ namespace GameScene
                 note.Move();
             }
 
-            for (int i = 0; i < connectingLines.Count; i++)
+            for (int i = 0; i < sendedConnectingLines.Count; i++)
             {
-                connectingLines[i].Move();
+                sendedConnectingLines[i].Move();
             }
         }
     }

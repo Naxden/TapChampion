@@ -11,8 +11,13 @@ namespace GameScene
         {
             if (collision.CompareTag("Note"))
             {
-                NoteMB note = collision.GetComponent<NoteMB>();
+                var note = collision.GetComponent<NoteMB>();
                 noteManager.RetrieveNote(note);
+            }
+            else if (collision.CompareTag("ConnectingLine"))
+            {
+                var connectingLine = collision.GetComponent<ConnectingLine>();
+                noteManager.DestroyConnectingLine(connectingLine);
             }
         }
     }

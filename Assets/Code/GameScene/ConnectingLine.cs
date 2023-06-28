@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameScene
@@ -14,21 +15,25 @@ namespace GameScene
         [SerializeField]
         private Vector3 endScale;
 
+        [SerializeField, Range(1f, 1.2f)]
+        private float lerpError = 1.029f;
+
         private NoteManager noteManager;
-        private readonly float error = 0.1f;
-        private float lerpDuration = 0f;
-        private float timeElpased = 0f;
 
-        private int notesCount;
-        private float begin;
-        private float end;
+        private List<NoteMB> notes = new List<NoteMB>(5);
+        private int leftEnd;
+        private int rightEnd;
 
-        public void Initialize(int begin, int end, float time, NoteManager noteManager)
+        public void AddNote(NoteMB note)
         {
-            lerpDuration = time;
+            notes.Add(note);
+        }
+
+        public void Initialize(int leftEnd, int rightEnd, NoteManager noteManager)
+        {
             this.noteManager = noteManager;
-            this.begin = begin / 4f;
-            this.end = end / 4f;
+            this.leftEnd = leftEnd;
+            this.rightEnd = rightEnd;
 
             Resize();
         }
@@ -37,33 +42,40 @@ namespace GameScene
         {
             Renderer myRenderer = GetComponent<Renderer>();
 
-            myRenderer.material.SetFloat("_Begin", begin);
-            myRenderer.material.SetFloat("_End", end);
+            myRenderer.material.SetFloat("_Begin", leftEnd / 4f);
+            myRenderer.material.SetFloat("_End", rightEnd / 4f);
         }
 
         public void Move()
         {
-            if (timeElpased <= lerpDuration)
-            {
-                float timeOverLerp = timeElpased / (lerpDuration - error);
+            float lerp = notes[^1].GetTravelStatus();
 
-                transform.position = Vector3.Lerp(startPos, endPos, timeOverLerp);
-                transform.localScale = Vector3.Lerp(startScale, endScale, timeOverLerp);
-
-                timeElpased += Time.deltaTime;
-            }
-            else
-                noteManager.DestroyConnectingLine(this);
+            transform.localScale = Vector3.LerpUnclamped(startScale, endScale, lerp * lerpError);
+            transform.position = Vector3.LerpUnclamped(startPos, endPos, lerp * lerpError);
         }
 
-        public void NoteRemoved()
+        public void NoteRemoved(int buttonIndex)
         {
-            notesCount--;
 
-            if (notesCount <= 1)
+            if (notes.Count <= 2)
             {
                 Debug.Log("Niszcze sie");
                 noteManager.DestroyConnectingLine(this);
+            }
+            else
+            {
+                if (buttonIndex == leftEnd)
+                {
+                    notes.RemoveAt(0);
+                    leftEnd = notes[0].GetButtonIndex();
+                }
+                else if (buttonIndex == rightEnd)
+                {
+                    notes.RemoveAt(notes.Count - 1);
+                    rightEnd = notes[^1].GetButtonIndex();
+                }
+
+                Resize();
             }
         }
     }

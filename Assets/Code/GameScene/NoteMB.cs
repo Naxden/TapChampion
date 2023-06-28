@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Saving;
 
@@ -7,10 +5,10 @@ namespace GameScene
 {
     public class NoteMB : MonoBehaviour
     {
-
         [SerializeField]
         protected NoteType noteType;
 
+        private Vector3 startPosition;
         [SerializeField]
         Button buttonPosition;
         private int buttonIndex = -1;
@@ -18,7 +16,8 @@ namespace GameScene
         private float velocity = 3.5f;
         Vector3 direction;
 
-        ConnectingLine connectingLine = null;
+        private ConnectingLine connectingLine = null;
+        private float travelDistance;
 
         private LongNoteConnector noteConnector;
 
@@ -35,10 +34,12 @@ namespace GameScene
         public void SetConnectingLine(ConnectingLine connectingLine)
         {
             this.connectingLine = connectingLine;
+            connectingLine.AddNote(this);
         }
 
         public void Initialize(Vector3 startingPos, float velocity, NoteType noteType, int buttonIndex, Button targetButton)
         {
+            this.startPosition = startingPos;
             transform.position = startingPos;
             this.velocity = velocity;
             this.buttonIndex = buttonIndex;
@@ -48,6 +49,8 @@ namespace GameScene
             Vector3 pos = buttonPosition.transform.position;
             direction = new Vector3(pos.x - transform.position.x, pos.y - transform.position.y);
             direction = Vector3.Normalize(direction);
+
+            travelDistance = Vector3.Distance(startPosition, targetButton.transform.position);
         }
 
         public void UpdateVisuals(GameObject notePrefab)
@@ -77,6 +80,13 @@ namespace GameScene
                 noteConnector.SetEnd(transform.position);
         }
 
+        public float GetTravelStatus()
+        {
+            float travelCurrentDistance = Vector3.Distance(startPosition, transform.position);
+
+            return travelCurrentDistance / travelDistance;
+        }
+
         public LongNoteConnector GetNoteConnector()
         {
             return noteConnector;
@@ -90,7 +100,7 @@ namespace GameScene
         public void NoteRemoved()
         {
             if (connectingLine != null)
-                connectingLine.NoteRemoved();
+                connectingLine.NoteRemoved(buttonIndex);
 
             if (noteType == NoteType.LongEnd)
                 Destroy(noteConnector.gameObject);
