@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Saving;
 using Recording.Note;
-using UnityEngine.Events;
 using Slider = UnityEngine.UI.Slider;
+using System.Linq;
 
 namespace Recording
 {
@@ -200,7 +200,7 @@ namespace Recording
         public List<NoteObject> GetSortedNoteMap()
         {
             List<NoteObject> noteMap = new List<NoteObject>();
-
+            
             for (int track = 0; track < 5; track++) 
             {
                 SortTrack(track);
@@ -213,9 +213,7 @@ namespace Recording
                 }
             }
 
-            noteMap.Sort((p, q) => p.spawnTime.CompareTo(q.spawnTime));
-
-            return noteMap;
+            return noteMap.OrderBy(s => s.spawnTime).ThenBy(b => b.buttonIndex).ToList();
         }
     }
 }
