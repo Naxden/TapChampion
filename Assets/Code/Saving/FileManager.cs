@@ -4,20 +4,44 @@ using System;
 using UnityEngine.Networking;
 using System.Collections;
 using SimpleFileBrowser;
-using UnityEditor;
-using JetBrains.Annotations;
 
 namespace Saving
 {
     public static class FileManager
     {
-        const string MUSIC_BEGIN = "#Music\n", MUSIC_END = "#EndMusic";
-        const string NOTE_MAP_BEGIN = "#NoteMap\n", NOTE_MAP_END = "#EndNoteMap";
-        const string SPRITE_BEGIN = "#Sprite\n", SPRITE_END = "#EndSprite";
+        private const string MUSIC_BEGIN = "#Music\n", MUSIC_END = "#EndMusic";
+        private const string NOTE_MAP_BEGIN = "#NoteMap\n", NOTE_MAP_END = "#EndNoteMap";
+        private const string SPRITE_BEGIN = "#Sprite\n", SPRITE_END = "#EndSprite";
 
         public enum FileExtension {TAPCH, MUSIC, IMAGE};
 
         public static bool loadDialogInitialized = false;
+
+        public static readonly UserSettings defaultUserSettings = new()
+        {
+            difficulty = 0,
+            musicVolume = 0.5f, sfxVolume = 0.5f,
+            userLag = 0f,
+            keys = new System.Collections.Generic.List<int>()
+            {
+                (int)KeyCode.D, (int)KeyCode.F, (int)KeyCode.J, (int)KeyCode.K, (int)KeyCode.L,
+                (int)KeyCode.Space, (int)KeyCode.Delete
+            }
+        };
+
+        public static void CreateNecessaryStructure()
+        {
+            string applicationPath = GetPath("");
+
+            if (!File.Exists(applicationPath + "/userSettings"))
+                WriteUserSettings(defaultUserSettings);
+
+            if (!Directory.Exists(applicationPath + "/Songs"))
+                Directory.CreateDirectory(applicationPath + "/Songs");
+
+            if (!Directory.Exists(applicationPath + "/Downloads"))
+                Directory.CreateDirectory(applicationPath + "/Downloads");
+        }
 
         public static void WriteNoteFile(string path, NoteFile toSave)
         {
@@ -49,7 +73,7 @@ namespace Saving
 
             if (www.result == UnityWebRequest.Result.ConnectionError)
             {
-                Debug.Log(www.error);
+                Debug.LogWarning(www.error);
             }
             else
             {
