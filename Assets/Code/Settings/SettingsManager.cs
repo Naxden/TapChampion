@@ -12,12 +12,21 @@ namespace Settings
         private bool inputEnabled = false;
 
         [SerializeField]
-        GameObject settingsPanel;
+        private GameObject settingsPanel;
         [SerializeField]
-        GameObject settingsContent;
+        private GameObject settingsContent;
 
         [SerializeField]
-        SoundManager soundManager;
+        private SoundManager soundManager;
+
+        private AudioSource audioSource;
+        [Header("AudioClips")]
+        [SerializeField]
+        private AudioClip uiButtonClickAudio;
+        [SerializeField]
+        private AudioClip buttonClickAudio;
+        [SerializeField]
+        private AudioClip saveAudio;
 
         private UserSettings userSettings;
 
@@ -33,11 +42,12 @@ namespace Settings
 
         private void Awake()
         {
-            userSettings = FileManager.GetUserSettings();
+            audioSource = GetComponent<AudioSource>();
         }
 
         private void Start()
         {
+            userSettings = FileManager.GetUserSettings();
             soundManager.InitializeSounds(userSettings.musicVolume, userSettings.sfxVolume);
         }
 
@@ -93,6 +103,11 @@ namespace Settings
         public void EnableInput(bool toEnable)
         {
             inputEnabled = toEnable;
+        }
+
+        public UserSettings GetDeafultSettings()
+        {
+            return FileManager.defaultUserSettings;
         }
 
         public void SaveSettings()
@@ -179,6 +194,21 @@ namespace Settings
         public void KeyBindsChanged()
         {
             keyBindsChanged = true;
+        }
+
+        public void PlayUiButtonSound()
+        {
+            audioSource.PlayOneShot(uiButtonClickAudio);
+        }
+
+        public void PlayButtonSound()
+        {
+            audioSource.PlayOneShot(buttonClickAudio);
+        }
+
+        public void PlaySaveSound()
+        {
+            audioSource.PlayOneShot(saveAudio);
         }
     }
 }

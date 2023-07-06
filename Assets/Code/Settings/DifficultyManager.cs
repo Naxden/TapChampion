@@ -1,5 +1,3 @@
-using Saving;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,6 +35,7 @@ namespace Settings
                 {
                     settingsManager.SetDifficulty(difficulty);
                     settingsManager.SaveSettings();
+                    settingsManager.PlaySaveSound();
                     settingsManager.DifficultyChanged();
 
                     difficultyChanged = false;

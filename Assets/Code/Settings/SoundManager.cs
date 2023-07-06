@@ -1,7 +1,5 @@
-using Saving;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace Settings
@@ -56,6 +54,7 @@ namespace Settings
                     settingsManager.SetMusicVolume(musicSlider.value);
                     settingsManager.SetSFXVolume(sfxSlider.value);
                     settingsManager.SaveSettings();
+                    settingsManager.PlaySaveSound();
 
                     volumeChanged = false;
                 }
@@ -95,7 +94,7 @@ namespace Settings
             sfxSlider.value = 1f;
 
             volumeChanged = true;
-            // SetFunctions will be called throug Event Subscriptions
+            // SetFunctions will be called through Event Subscriptions
         }
     }
 }

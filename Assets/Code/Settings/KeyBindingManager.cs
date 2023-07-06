@@ -1,4 +1,3 @@
-using Saving;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -20,24 +19,24 @@ namespace Settings
         private GameObject resetPrompt;
         private bool resetToDefault = false;
 
-        private readonly List<int> defaultKeyCodes = new List<int>()
-        {
-            (int)KeyCode.D, (int)KeyCode.F, (int)KeyCode.J, (int)KeyCode.K, (int)KeyCode.L,
-
-            (int)KeyCode.Delete,(int)KeyCode.Space
-        };
+        private List<int> defaultKeys;
         private List<int> userKeyCodes;
-
 
         private KeyCode newKey;
         private bool settingNewKey = false;
         private bool keyChanged = false;
+
 
         private void OnEnable()
         {
             userKeyCodes = settingsManager.GetKeys();
 
             UpdateKeysText();
+        }
+
+        private void Start()
+        {
+            defaultKeys = settingsManager.GetDeafultSettings().keys;
         }
 
         private void UpdateKeysText()
@@ -56,6 +55,7 @@ namespace Settings
                 {
                     settingsManager.SetKeys(userKeyCodes);
                     settingsManager.SaveSettings();
+                    settingsManager.PlaySaveSound();
                     settingsManager.KeyBindsChanged();
 
                     keyChanged = false;
@@ -81,7 +81,7 @@ namespace Settings
                 yield break;
             }
 
-            userKeyCodes = defaultKeyCodes;
+            userKeyCodes = defaultKeys;
             UpdateKeysText();
             resetToDefault = false;
             keyChanged = true;

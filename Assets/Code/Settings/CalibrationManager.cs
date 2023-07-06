@@ -22,7 +22,7 @@ namespace Settings
             userLag = settingsManager.GetUserLag();
         }
 
-        void Update()
+        private void Update()
         {
             if (lagChanged)
             {
@@ -30,6 +30,7 @@ namespace Settings
                 {
                     settingsManager.SetUserLag(userLag);
                     settingsManager.SaveSettings();
+                    settingsManager.PlaySaveSound();
                     settingsManager.CalibrationChanged();
 
                     lagChanged = false;
