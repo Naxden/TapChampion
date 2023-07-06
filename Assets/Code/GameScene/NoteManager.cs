@@ -27,22 +27,27 @@ namespace GameScene
         private float noteTimeToArrive = 2.5f;
         private float[] notesVelocity = new float[5];
 
+        #region Long Notes Connector
         [SerializeField]
         private GameObject connectingLinePrefab;
         private NoteMB leftConnectingNote = null;
         private List<ConnectingLine> sendedConnectingLines = new List<ConnectingLine>();
+        #endregion
 
+        #region Connection Between Notes
         [SerializeField]
         private GameObject longNoteConnectorPrefab;
+        private List<LongNoteConnector> longNoteConnectors = new List<LongNoteConnector>();
         private NoteMB[] sendedLongBeginNotes = new NoteMB[5];
+        #endregion
 
-        float songTimer;
+        private float songTimer;
         private bool songIsPlaying = false;
-        int noteIndex = 0;
+        private int noteIndex = 0;
 
-        List<NoteObject> notesMap;
-        float userLag = 0f;
-        List<NoteMB> sendedNotes = new List<NoteMB>();
+        private List<NoteObject> notesMap;
+        private float userLag = 0f;
+        private List<NoteMB> sendedNotes = new List<NoteMB>();
 
         void Awake()
         {
@@ -112,16 +117,49 @@ namespace GameScene
             }
 
             spawn = false;
+            RetrieveAllNotes();
+            DeleteAllLines();
 
-            for (int i = sendedNotes.Count - 1; i >= 0; i--)
+            // Clearing reference of LongBeginNotes
+            for (int i = 0; i < 5; i++)
             {
-                RetrieveNote(sendedNotes[i]);
+                sendedLongBeginNotes[i] = null;
             }
+
+            DeleteAllLongNoteConnectors();
 
             noteIndex = 0;
 
             leftConnectingNote = null;
         }
+
+
+        private void RetrieveAllNotes()
+        {
+            for (int i = sendedNotes.Count - 1; i >= 0; i--)
+            {
+                RetrieveNote(sendedNotes[i]);
+            }
+        }
+
+        private void DeleteAllLines()
+        {
+            for (int i = sendedConnectingLines.Count - 1; i >= 0; i--)
+            {
+                Destroy(sendedConnectingLines[i].gameObject);
+            }
+            sendedConnectingLines.Clear();
+        }
+        private void DeleteAllLongNoteConnectors()
+        {
+            for (int i = longNoteConnectors.Count - 1; i >= 0; i--)
+            {
+                if (longNoteConnectors[i] != null)
+                    Destroy(longNoteConnectors[i].gameObject);
+            }
+            longNoteConnectors.Clear();
+        }
+
 
         //int breakIndex = 0;
 
@@ -136,7 +174,6 @@ namespace GameScene
             {
                 if (noteIndex >= notesMap.Count)
                 {
-                    Debug.Log("Load notes, index out of bound");
                     spawn = false;
                 }
                 else
@@ -190,6 +227,7 @@ namespace GameScene
             {
                 LongNoteConnector connector = Instantiate(longNoteConnectorPrefab).GetComponent<LongNoteConnector>();
 
+                longNoteConnectors.Add(connector);
                 longNote.SetNoteConnector(connector);
 
                 connector.SetBegin(noteStartingPositions[buttonIndex]);

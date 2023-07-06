@@ -74,10 +74,13 @@ namespace GameScene
         {
             transform.Translate(velocity * Time.deltaTime * direction);
 
-            if (noteType == NoteType.LongBegin)
-                noteConnector.SetBegin(transform.position);
-            else if (noteType == NoteType.LongEnd)
-                noteConnector.SetEnd(transform.position);
+            if (noteConnector != null)
+            {
+                if (noteType == NoteType.LongBegin)
+                    noteConnector.SetBegin(transform.position);
+                else if (noteType == NoteType.LongEnd)
+                    noteConnector.SetEnd(transform.position);
+            }
         }
 
         public float GetTravelStatus()
@@ -100,10 +103,13 @@ namespace GameScene
         public void NoteRemoved()
         {
             if (connectingLine != null)
-                connectingLine.NoteRemoved(buttonIndex);
+                connectingLine.NoteRemoved(this);
 
             if (noteType == NoteType.LongEnd)
+            {
                 Destroy(noteConnector.gameObject);
+                noteConnector = null;
+            }
         }
 
         //private void OnDrawGizmos()

@@ -34,7 +34,7 @@ namespace GameScene
             this.noteManager = noteManager;
             this.leftEnd = leftEnd;
             this.rightEnd = rightEnd;
-
+            
             Resize();
         }
 
@@ -54,25 +54,27 @@ namespace GameScene
             transform.position = Vector3.LerpUnclamped(startPos, endPos, lerp * lerpError);
         }
 
-        public void NoteRemoved(int buttonIndex)
+        public void NoteRemoved(NoteMB noteToRemove)
         {
-
             if (notes.Count <= 2)
             {
-                Debug.Log("Niszcze sie");
                 noteManager.DestroyConnectingLine(this);
             }
             else
             {
-                if (buttonIndex == leftEnd)
+                if (noteToRemove.GetButtonIndex() == leftEnd)
                 {
                     notes.RemoveAt(0);
                     leftEnd = notes[0].GetButtonIndex();
                 }
-                else if (buttonIndex == rightEnd)
+                else if (noteToRemove.GetButtonIndex() == rightEnd)
                 {
                     notes.RemoveAt(notes.Count - 1);
                     rightEnd = notes[^1].GetButtonIndex();
+                }
+                else
+                {
+                    notes.Remove(noteToRemove);
                 }
 
                 Resize();

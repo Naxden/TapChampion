@@ -8,8 +8,6 @@ namespace GameScene
         [SerializeField]
         private LineRenderer myLineRenderer;
             
-        // For visual aspects BeginNote will be the end of connecting line
-
         public void EnableLine()
         {
             myLineRenderer.enabled = true;
