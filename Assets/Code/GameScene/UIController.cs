@@ -6,7 +6,7 @@ namespace GameScene
     public class UIController : MonoBehaviour
     {
         [SerializeField]
-        TextMeshProUGUI scoreTM, hitInfoTM, accuracyTM, multiplierTM, timerTM;
+        private TextMeshProUGUI scoreTM, hitInfoTM, accuracyTM, multiplierTM;
 
         public void UpdateInfo(int score, string hitInfo, float accuracy, int multiplier)
         {
@@ -19,11 +19,6 @@ namespace GameScene
         public void UpdateScore(int score)
         {
             scoreTM.text = $"Score: {score}";
-        }
-
-        public void UpdateTime(float time)
-        {
-            timerTM.text = $" {time}";
         }
     }
 }

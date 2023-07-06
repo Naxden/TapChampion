@@ -65,7 +65,7 @@ namespace GameScene
         private SpriteRenderer songBackgroundRenderer;
     #endregion
 
-        private UserSettings userSettings;
+     private UserSettings userSettings;
 
     #region SettingsFunctions
         private void Awake()
@@ -112,7 +112,6 @@ namespace GameScene
                 gameTimer += Time.deltaTime;
 
                 noteManager.SetTimer(gameTimer);
-                uiController.UpdateTime(gameTimer);
             }
 
             if (timerStarted && gameTimer >= songLength)
@@ -205,7 +204,7 @@ namespace GameScene
             if (difficulty == Difficulty.HARD)
                 return song.noteFile.hard;
 
-            Debug.Log("Player.GetNotes() difficulty is not set");
+            Debug.LogError("Player.GetNotes() difficulty is not set");
             return null;
         }
 

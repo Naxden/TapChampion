@@ -2,29 +2,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using Saving;
 using TMPro;
+using System.Collections;
 
 namespace GameScene
 {
     public class Button : MonoBehaviour
     {
         [SerializeField]
-        KeyCode keyCode;
+        private KeyCode keyCode;
 
         [SerializeField]
         private TextMeshProUGUI keyTag;
-        SpriteRenderer buttonSprite;
+        private SpriteRenderer buttonSprite;
         
         [SerializeField]
-        Player player;
+        private Player player;
 
         [SerializeField]
-        NoteManager noteManager;
+        private NoteManager noteManager;
 
-        Queue<NoteMB> notesQueue = new Queue<NoteMB>();
-        AudioSource audioSource;
+        private Queue<NoteMB> notesQueue = new Queue<NoteMB>();
+        private AudioSource audioSource;
 
-
-        bool isWaitingForEndNote = false;
+        private bool isWaitingForEndNote = false;
         
         public void SetKey(KeyCode keyCode)
         {
@@ -69,12 +69,7 @@ namespace GameScene
                     }
                 }
             }
-
-            if (isWaitingForEndNote)
-                player.LongNoteBeingHit();
-
         }
-
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
@@ -83,7 +78,6 @@ namespace GameScene
             if (target.CompareTag("Note") && !notesQueue.Contains(target))
             {
                 notesQueue.Enqueue(target);
-                audioSource.PlayOneShot(audioSource.clip);
             }
         }
 
@@ -104,11 +98,23 @@ namespace GameScene
             NoteMB note = notesQueue.Dequeue();
             float distance = Vector3.Distance(transform.position, note.transform.position);
 
+            audioSource.PlayOneShot(audioSource.clip);
+
             player.NoteWasHit(HitInfo(distance));
             noteManager.RetrieveNote(note);
             isWaitingForEndNote = note.GetNoteType() == NoteType.LongBegin;
+            StartCoroutine(LongNoteRoutine());
         }
         
+        private IEnumerator LongNoteRoutine()
+        {
+            while (isWaitingForEndNote)
+            {
+                player.LongNoteBeingHit();
+                yield return new WaitForSeconds(0.4f);
+            }
+        }
+
         private string HitInfo(float distance)
         {
             if (distance <= 0.128f)
@@ -128,22 +134,6 @@ namespace GameScene
                 return "Fine";
             }
         }
-
-        //private void OnDrawGizmos()
-        //{
-        //    UnityEditor.Handles.color = Color.green;
-        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 1.28f);
-
-        //    UnityEditor.Handles.color = Color.yellow;
-        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.768f);
-
-        //    UnityEditor.Handles.color = Color.blue;
-        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.384f);
-
-        //    UnityEditor.Handles.color = Color.red;
-        //    UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, 0.128f);
-
-        //}
 
         public int QueueLength()
         {

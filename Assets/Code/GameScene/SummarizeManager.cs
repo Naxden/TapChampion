@@ -8,13 +8,13 @@ namespace GameScene
     public class SummarizeManager : MonoBehaviour
     {
         [SerializeField, Header("External")]
-        FadeManger fadeManger;
+        private FadeManger fadeManger;
 
         [SerializeField]
-        Player player;
+        private Player player;
 
         [SerializeField, Header("Internal")]
-        GameObject summarizeContent;
+        private GameObject summarizeContent;
 
         [SerializeField, Header("Text Values")]
         private TextMeshProUGUI scoreTMP;
