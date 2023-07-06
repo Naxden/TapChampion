@@ -1,5 +1,6 @@
 using Global;
 using Saving;
+using Settings;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -39,6 +40,10 @@ namespace SongSelect
 
         [SerializeField]
         private Button playGameButton;
+
+        [SerializeField]
+        private SettingsManager settingsManager;
+
 
         private void Start()
         {
@@ -94,7 +99,7 @@ namespace SongSelect
             GameObject newSong = Instantiate(songPrefab, songsHolder.transform);
             newSong.name = songTitle;
             SongPanel songPanel = newSong.GetComponent<SongPanel>();
-            songPanel.Initialize(song, this);
+            songPanel.Initialize(song, this, settingsManager.PlayButtonSound);
             loadedSongPanels.Add(songPanel);
         }
 
@@ -222,7 +227,6 @@ namespace SongSelect
                 return;
 
             FileManager.ExportTapchFile(songToExport);
-            Debug.Log($"I am exporting: {songToExport}");
         }
 
         public void UpdateDifficulty()

@@ -1,5 +1,7 @@
+using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace SongSelect
@@ -22,15 +24,20 @@ namespace SongSelect
         private TMP_Text accuracy;
         private SongManager songManager;
 
+        private UnityAction playButtonSound;
+
         public Song Song { get; private set; }
 
         private bool selected = false;
 
-        public void Initialize(Song song, SongManager songManager)
+        public void Initialize(Song song, SongManager songManager, UnityAction playButtonSound)
         {
             Song = song;
             this.songManager = songManager;
+            this.playButtonSound = playButtonSound;
             UpdateInfo();
+
+            GetComponentsInChildren<Button>()[1].onClick.AddListener(playButtonSound);
         }
         
         private void UpdateInfo()
@@ -72,6 +79,8 @@ namespace SongSelect
 
         public void PanelClick()
         {
+            playButtonSound();
+
             if (!selected) 
             {
                 Enque();
