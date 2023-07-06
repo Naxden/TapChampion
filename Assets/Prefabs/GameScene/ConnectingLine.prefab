@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6433003439894634847}
   m_Layer: 0
   m_Name: ConnectingLine
-  m_TagString: Untagged
+  m_TagString: ConnectingLine
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -75,7 +75,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_Sprite: {fileID: 21300000, guid: f0d74091a2f158144a8eed15cfe92eda, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.8}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -101,4 +101,4 @@ MonoBehaviour:
   endPos: {x: 0, y: -2.24, z: 0}
   startScale: {x: 0.1, y: 0.1, z: 0}
   endScale: {x: 0.926, y: 0.926, z: 0}
-  changer: 0.1
+  lerpError: 1.029

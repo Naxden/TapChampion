@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Recording.Note
 {
@@ -11,12 +10,10 @@ namespace Recording.Note
 
         private LineRenderer lineRenderer;
     
-
         private void Awake()
         {
             lineRenderer = GetComponent<LineRenderer>();
         }
- 
 
         public void UpdateLine(float uselessVal)
         {

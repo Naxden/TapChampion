@@ -276,6 +276,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1961361680}
     m_Modifications:
+    - target: {fileID: 1217728992990421376, guid: 6ba7ffba6bbba3140ae8f837dccedfd3, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_StringArgument
+      value: Exit
+      objectReference: {fileID: 0}
     - target: {fileID: 3704206530124278363, guid: 6ba7ffba6bbba3140ae8f837dccedfd3, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -322,7 +326,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3704206531492011555, guid: 6ba7ffba6bbba3140ae8f837dccedfd3, type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 3704206531492011555, guid: 6ba7ffba6bbba3140ae8f837dccedfd3, type: 3}
       propertyPath: m_AnchorMax.x
@@ -431,6 +435,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3704206531492011555, guid: 6ba7ffba6bbba3140ae8f837dccedfd3, type: 3}
   m_PrefabInstance: {fileID: 381238983}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &381238985 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3704206531492011552, guid: 6ba7ffba6bbba3140ae8f837dccedfd3, type: 3}
+  m_PrefabInstance: {fileID: 381238983}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1954396180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d5d1d15dacc10e40a7db4c627c42afa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &419470645
 GameObject:
   m_ObjectHideFlags: 0
@@ -749,6 +764,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2b85eee98cab4e48925546ec4572ae6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  settingsManager: {fileID: 381238985}
 --- !u!4 &734710974
 Transform:
   m_ObjectHideFlags: 0
@@ -1070,6 +1086,18 @@ MonoBehaviour:
       - m_Target: {fileID: 734710973}
         m_TargetAssemblyTypeName: Menu.ImportManager, Assembly-CSharp
         m_MethodName: ImportSong
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 381238985}
+        m_TargetAssemblyTypeName: Settings.SettingsManager, Assembly-CSharp
+        m_MethodName: PlayUiButtonSound
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1483,6 +1511,18 @@ MonoBehaviour:
           m_StringArgument: SongSelect
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 381238985}
+        m_TargetAssemblyTypeName: Settings.SettingsManager, Assembly-CSharp
+        m_MethodName: PlayUiButtonSound
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1374444273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1615,6 +1655,18 @@ MonoBehaviour:
           m_IntArgument: 3
           m_FloatArgument: 0
           m_StringArgument: Recording
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 381238985}
+        m_TargetAssemblyTypeName: Settings.SettingsManager, Assembly-CSharp
+        m_MethodName: PlayUiButtonSound
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1610202962
